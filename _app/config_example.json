@@ -1,0 +1,22 @@
+{
+    "database_homologation": {
+        "host": "localhost",
+        "database": "academia_agendamento",
+        "username": "root",
+        "password": ""
+    },
+    "main_database": {
+        "host": "",
+        "database": "",
+        "username": "",
+        "password": ""
+    },
+    "email": {
+        "MAILUSER": "",
+        "MAILPASS": "",
+        "MAILPORT": "",
+        "MAILHOST": "",
+        "FROM_NAME": "",
+        "FROM_EMAIL": ""
+    }
+}

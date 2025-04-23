@@ -1,0 +1,17 @@
+{
+    "name": "kerlon/sistema-agendamento",
+    "autoload": {
+        "psr-4": {
+            "Kerlon\\SistemaAgendamento\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "kerlonfernandes",
+            "email": "kerlon1221@gmail.com"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "^4.2"
+    }
+}
