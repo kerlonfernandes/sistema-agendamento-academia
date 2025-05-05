@@ -21,10 +21,7 @@ $(document).ready(function () {
             });
         },
         columnDefs: [
-            {
-                targets: [0],
-                visible: false
-            },
+
             {
                 targets: [1, 2, 3],
                 orderable: true
@@ -277,12 +274,273 @@ $(document).ready(function () {
         });
     });
 
+
+    if ($('#instructorsTable').length > 0) {
+        loadInstructors();
+    }
+
+    $('#btnSearch').click(function () {
+        loadInstructors();
+    });
+
+    $('#searchInstructor').keypress(function (e) {
+        if (e.which == 13) {
+            loadInstructors();
+        }
+    });
+
+    $(document).on('click', '.btn-view', function () {
+        const instructorId = $(this).data('id');
+        viewInstructorDetails(instructorId);
+    });
+
+    $(document).on('click', '.btn-edit', function () {
+        const instructorId = $(this).data('id');
+        editInstructor(instructorId);
+    });
+
+    $('#diaSelect').change(function () {
+        const diaSelecionado = $(this).val();
+        const $horarioSelect = $('#horarioSelect');
+
+        if (diaSelecionado) {
+            $horarioSelect.prop('disabled', true).html('<option value="">Carregando horários...</option>');
+
+            $.ajax({
+                url: url + '/reload/horarios-por-dia.php',
+                type: 'GET',
+                data: {
+                    dia_semana: diaSelecionado
+                },
+                success: function (html) {
+                    $horarioSelect.html(html);
+                    $horarioSelect.prop('disabled', false);
+                },
+                error: function () {
+                    $horarioSelect.html('<option value="">Erro ao carregar horários</option>');
+                }
+            });
+        } else {
+            $horarioSelect.prop('disabled', true).html('<option value="">Selecione um dia primeiro</option>');
+        }
+    });
+
+    $('#horarioSelect').change(function () {
+        const horarioId = $(this).val();
+
+        if (horarioId) {
+            carregarAgendamentos(horarioId);
+        } else {
+            $('#resultados-agendamentos').html(`
+                <div class="text-center text-muted">
+                    <i class="bi bi-calendar-event fs-1"></i>
+                    <p>Selecione um horário para visualizar os agendamentos</p>
+                </div>
+            `);
+        }
+    });
+
+    function carregarAgendamentos(horarioId) {
+        $('#resultados-agendamentos').html(`
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p>Carregando agendamentos...</p>
+            </div>
+        `);
+
+        $.ajax({
+            url: url + '/reload/clientes.php',
+            type: 'GET',
+            data: {
+                horario_id: horarioId
+            },
+            success: function (html) {
+                $('#resultados-agendamentos').html(html);
+            },
+            error: function () {
+                $('#resultados-agendamentos').html(`
+                    <div class="alert alert-danger">
+                        Ocorreu um erro ao carregar os agendamentos.
+                    </div>
+                `);
+            }
+        });
+    }
+
+    $(document).on('click', '.btn-confirmar', function () {
+        const agendamentoId = $(this).data('id');
+        const $btn = $(this);
+
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Confirmando...');
+
+        $.ajax({
+            url: url + '/reload/confirmar.php',
+            type: 'POST',
+            data: {
+                agendamento_id: agendamentoId,
+                action: 'confirmar'
+            },
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    const horarioId = $('#horarioSelect').val();
+                    carregarAgendamentos(horarioId);
+
+                    showToast('success', 'Agendamento confirmado com sucesso!');
+                } else {
+                    showToast('danger', response.message || 'Erro ao confirmar agendamento');
+                    $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Confirmar');
+                }
+            },
+            error: function () {
+                showToast('danger', 'Erro na comunicação com o servidor');
+                $btn.prop('disabled', false).html('<i class="bi bi-check-circle"></i> Confirmar');
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-cancelar', function () {
+        const agendamentoId = $(this).data('id');
+        const $btn = $(this);
+
+        if (!confirm('Tem certeza que deseja cancelar este agendamento?')) {
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Cancelando...');
+
+        $.ajax({
+            url: url + '/reload/confirmar.php',
+            type: 'POST',
+            data: {
+                agendamento_id: agendamentoId,
+                action: 'cancelar'
+            },
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    const horarioId = $('#horarioSelect').val();
+                    carregarAgendamentos(horarioId);
+
+                    showToast('success', 'Agendamento cancelado com sucesso!');
+                } else {
+                    showToast('danger', response.message || 'Erro ao cancelar agendamento');
+                    $btn.prop('disabled', false).html('<i class="bi bi-x-circle"></i> Cancelar');
+                }
+            },
+            error: function () {
+                showToast('danger', 'Erro na comunicação com o servidor');
+                $btn.prop('disabled', false).html('<i class="bi bi-x-circle"></i> Cancelar');
+            }
+        });
+    });
+
+    // Função para resolver todos os agendamentos
+    $(document).on('click', '#btn-resolver-todos', function () {
+        const horarioId = $('#horarioSelect').val();
+        const $btn = $(this);
+
+        if (!horarioId) {
+            showToast('danger', 'Selecione um horário primeiro');
+            return;
+        }
+
+        if (!confirm('Deseja confirmar TODOS os agendamentos deste horário?')) {
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Confirmando todos...');
+
+        $.ajax({
+            url: url + '/reload/confirmar-todos.php',
+            type: 'POST',
+            data: {
+                horario_id: horarioId
+            },
+            dataType: 'json',
+            success: function (response) {
+                if (response.success) {
+                    carregarAgendamentos(horarioId);
+                    showToast('success', response.message || 'Todos os agendamentos foram confirmados!');
+                } else {
+                    showToast('danger', response.message || 'Erro ao confirmar agendamentos');
+                }
+                $btn.prop('disabled', false).html('<i class="bi bi-check-all"></i> Resolver Todos');
+            },
+            error: function () {
+                showToast('danger', 'Erro na comunicação com o servidor');
+                $btn.prop('disabled', false).html('<i class="bi bi-check-all"></i> Resolver Todos');
+            }
+        });
+    });
+
+    function showToast(type, message) {
+        const toast = `
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        $('body').append(toast);
+        setTimeout(() => $('.toast').remove(), 3000);
+    }
+
+
     $('.spinner-text-loading').addClass('d-none');
     $('.texto-aviso-area').removeClass('d-none');
 
     $("#overlay").fadeOut(500);
 });
 
+
+function loadInstructors(page = 1) {
+    const searchTerm = $('#searchInstructor').val();
+
+    $('#instructorsTable').html(`
+<tr>
+    <td colspan="7" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </td>
+</tr>
+`);
+
+    $.ajax({
+        url: '../reload/instrutores.php',
+        type: 'GET',
+        data: {
+            search: searchTerm,
+            page: page
+        },
+        success: function (response) {
+            $('#instructorsTable').html(response);
+
+            if (response.pagination) {
+                $('#pagination').html(response);
+            }
+        },
+        error: function () {
+            $('#instructorsTable').html(`
+        <tr>
+            <td colspan="7" class="text-center text-danger py-4">
+                <i class="bi bi-exclamation-triangle fs-4"></i>
+                <p class="mt-2">Erro ao carregar dados</p>
+            </td>
+        </tr>
+    `);
+        }
+    });
+}
 
 function editarAgendamento(id) {
     Swal.fire({

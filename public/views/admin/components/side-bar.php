@@ -1,13 +1,21 @@
 <aside id="sidebar" class="sidebar">
     <ul class="sidebar-nav" id="sidebar-nav">
-
+    <?php
+        if (
+            isset($_SESSION['userId']) &&
+            !empty($_SESSION['userId']) &&
+            ($_SESSION['loggedAdmin'] ?? false) === true &&
+            ($_SESSION['admin'] ?? false) === true 
+            && (!empty($_SESSION['accessLevel']) || isset($_SESSION['accessLevel']))
+            && $_SESSION['accessLevel'] == 4
+        ): ?>
         <li class="nav-item">
             <a class="nav-link " href="<?= SITE ?>">
                 <i class="bi bi-newspaper"></i>
                 <span>Ir para o formulário</span>
             </a>
         </li>
-
+        <?php endif; ?>
         <li class="nav-item">
             <a class="nav-link " href="<?= SITE ?>/admin">
                 <i class="bi bi-grid"></i>
@@ -25,19 +33,47 @@
                         <i class="bi bi-circle"></i><span>Acompanhamento</span>
                     </a>
                 </li>
-                <li>
-                    <a href="<?= SITE ?>/admin/configuracoes">
-                        <i class="bi bi-circle"></i><span>Configurações</span>
-                    </a>
-                </li>
+                <?php if (
+                    isset($_SESSION['userId']) &&
+                    !empty($_SESSION['userId']) &&
+                    ($_SESSION['loggedAdmin'] ?? false) === true &&
+                    ($_SESSION['admin'] ?? false) === true
+                    && (!empty($_SESSION['accessLevel']) || isset($_SESSION['accessLevel']))
+                    && $_SESSION['accessLevel'] >= 4
+                ): ?>
+                    <li>
+                        <a href="<?= SITE ?>/admin/configuracoes">
+                            <i class="bi bi-circle"></i><span>Configurações</span>
+                        </a>
+                    </li>
+                <?php endif; ?>
+                <?php if (
+                    isset($_SESSION['userId']) &&
+                    !empty($_SESSION['userId']) &&
+                    ($_SESSION['loggedAdmin'] ?? false) === true &&
+                    ($_SESSION['admin'] ?? false) === true
+                    && (!empty($_SESSION['accessLevel']) || isset($_SESSION['accessLevel']))
+                    && $_SESSION['accessLevel'] >= 4
+                ): ?>
                 <li>
                     <a href="<?= SITE ?>/admin/relatorios">
                         <i class="bi bi-circle"></i><span>Relatórios</span>
                     </a>
                 </li>
+                <?php endif; ?>
                 <li>
                     <a href="<?= SITE ?>/admin/clientes">
                         <i class="bi bi-circle"></i><span>Clientes com horários agendados</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= SITE ?>/admin/resolver/agendamentos">
+                        <i class="bi bi-circle"></i><span>Resolver agendamentos</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= SITE ?>/admin/instrutores">
+                        <i class="bi bi-circle"></i><span>Instrutores</span>
                     </a>
                 </li>
             </ul>

@@ -25,7 +25,7 @@
             <div class="row">
 
                 <!-- Left side columns -->
-                <div class="col-lg-8">ad
+                <div class="col-lg-8">
                     <div class="row">
 
                     </div>

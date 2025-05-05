@@ -29,7 +29,7 @@ class AgendaModel extends Model
                  ' – ',
                  DATE_FORMAT(horarios.horario_fim, '%H:%i')
              ) = :horario
-             AND agendamentos_clientes.status_agendamento = 'ativo'",
+             AND agendamentos_clientes.status_agendamento = 'agendado'",
             [
                 ':dia' => $dia,
                 ':horario' => $horario
@@ -45,6 +45,7 @@ class AgendaModel extends Model
         $horarios = $this->database->execute_query(
             "SELECT
                     h.id,
+                    ac.id AS id_agendamento,
                     h.dia_semana,
                     CONCAT(
                         h.horario_inicio,
@@ -60,7 +61,8 @@ class AgendaModel extends Model
                 LEFT JOIN users u ON
                     ac.user_id = u.id
                 WHERE
-                    ac.status_agendamento = 'ativo' OR ac.status_agendamento IS NULL
+                    (ac.status_agendamento = 'agendado' 
+                    OR ac.status_agendamento = 'confirmado')
                 GROUP BY
                     h.dia_semana,
                     h.horario_inicio,
@@ -95,7 +97,8 @@ class AgendaModel extends Model
                 LEFT JOIN users u ON
                     ac.user_id = u.id
                 WHERE
-                    (ac.status_agendamento = 'ativo' OR ac.status_agendamento IS NULL)
+                    (ac.status_agendamento = 'agendado' 
+                    OR ac.status_agendamento = 'confirmado' OR ac.status_agendamento IS NULL)
                     AND h.dia_semana = :dia
                 GROUP BY
                     h.dia_semana,
@@ -128,7 +131,8 @@ class AgendaModel extends Model
                 LEFT JOIN users u ON
                     ac.user_id = u.id
                 WHERE
-                    (ac.status_agendamento = 'ativo' OR ac.status_agendamento IS NULL)
+                      (ac.status_agendamento = 'agendado' 
+                    OR ac.status_agendamento = 'confirmado' OR ac.status_agendamento IS NULL)
                     AND CONCAT(
                         DATE_FORMAT(h.horario_inicio, '%H:%i'),
                         ' – ',
@@ -153,6 +157,18 @@ class AgendaModel extends Model
         return $horarios;
     }
 
+    public function get_dias_semana()
+    {
+        $horarios = $this->database->execute_query("SELECT DISTINCT dia_semana FROM horarios", []);
+        return $horarios;
+    }
+
+    public function get_horarios_by_nome_dia($nome_dia_semana)
+    {
+        $r = $this->database->execute_query('SELECT * FROM `horarios` WHERE dia_semana = :dia_semana', [':dia_semana' => $nome_dia_semana]);
+        return $r;
+    }
+
     public function horarios_disponiveis_por_dia_horario(string $dia, string $horario)
     {
         $horarios = $this->database->execute_query(
@@ -172,7 +188,8 @@ class AgendaModel extends Model
                 LEFT JOIN users u ON
                     ac.user_id = u.id
                 WHERE
-                    (ac.status_agendamento = 'ativo' OR ac.status_agendamento IS NULL)
+                    (ac.status_agendamento = 'agendado' 
+                    OR ac.status_agendamento = 'confirmado' OR ac.status_agendamento IS NULL)
                     AND h.dia_semana = :dia
                     AND CONCAT(
                         DATE_FORMAT(h.horario_inicio, '%H:%i'),
@@ -326,7 +343,7 @@ class AgendaModel extends Model
         $insert_agendamento = $this->database->execute_query("INSERT INTO agendamentos_clientes (horario_id, user_id, status_agendamento, observacoes) VALUES (:horario_id, :user_id, :status_agendamento, :observacoes)", [
             ':horario_id' => $horario_id,
             ':user_id' => $user_id,
-            ':status_agendamento' => 'ativo',
+            ':status_agendamento' => 'agendado',
             ':observacoes' => $agendamento->getObservacoes(),
         ]);
 
@@ -358,12 +375,23 @@ class AgendaModel extends Model
                  ' – ',
                  DATE_FORMAT(horarios.horario_fim, '%H:%i')
              ) = :horario
-             AND agendamentos_clientes.status_agendamento = 'ativo'",
+             AND   (ac.status_agendamento = 'agendado' 
+                    OR ac.status_agendamento = 'confirmado')",
             [
                 ':email' => $email,
                 ':dia' => $dia,
                 ':horario' => $horario
             ]
+        );
+
+        return $disponibilidade;
+    }
+
+    public function get_agendamentos_qtd()
+    {
+        $disponibilidade = $this->database->execute_query(
+            "SELECT * FROM agendamentos_clientes WHERE status_agendamento != 'cancelado' OR status_agendamento != 'inativo' ",
+            []
         );
 
         return $disponibilidade;
@@ -390,7 +418,8 @@ class AgendaModel extends Model
             FROM users 
             LEFT JOIN agendamentos_clientes ON users.id = agendamentos_clientes.user_id
             LEFT JOIN horarios ON agendamentos_clientes.horario_id = horarios.id
-            WHERE agendamentos_clientes.status_agendamento = 'ativo' AND users.status = 1
+            WHERE (agendamentos_clientes.status_agendamento = 'agendado' 
+         OR agendamentos_clientes.status_agendamento = 'confirmado') AND users.status = 1
             GROUP BY users.id, users.nome, users.email, users.telefone
             ORDER BY total_horarios DESC",
             []
@@ -413,33 +442,40 @@ class AgendaModel extends Model
         return $user_horarios;
     }
 
-    public function user_horarios_client($id) {
+    public function user_horarios_client($id)
+    {
         $user_horarios = $this->database->execute_query(
             "SELECT 
-                horarios.id,
-                horarios.dia_semana,
-                horarios.horario_inicio,
-                horarios.horario_fim,
-                users.*,
-                agendamentos_clientes.*,
-                agendamentos_clientes.id as agendamento_id,
-                GROUP_CONCAT(
-                    CONCAT(
-                        DATE_FORMAT(horarios.horario_inicio, '%H:%i'),
-                        ' – ',
-                        DATE_FORMAT(horarios.horario_fim, '%H:%i')
-                    ) SEPARATOR '|'
-                ) as horarios_formatados
-            FROM agendamentos_clientes
-            LEFT JOIN horarios ON agendamentos_clientes.horario_id = horarios.id
-            LEFT JOIN users ON agendamentos_clientes.user_id = users.id
-            WHERE agendamentos_clientes.user_id = :id
-            GROUP BY agendamentos_clientes.id",
+            horarios.id,
+            horarios.dia_semana,
+            horarios.horario_inicio,
+            horarios.horario_fim,
+            users.*,
+            agendamentos_clientes.*,
+            agendamentos_clientes.id as agendamento_id,
+            instrutor.id as instrutor_id,
+            SUBSTRING_INDEX(instrutor.nome, ' ', 1) as instrutor_primeiro_nome,
+            instrutor.nome as instrutor_nome_completo,
+            instrutor.profile_img as instrutor_profile_img,
+            GROUP_CONCAT(
+                CONCAT(
+                    DATE_FORMAT(horarios.horario_inicio, '%H:%i'),
+                    ' – ',
+                    DATE_FORMAT(horarios.horario_fim, '%H:%i')
+                ) SEPARATOR '|'
+            ) as horarios_formatados
+        FROM agendamentos_clientes
+        LEFT JOIN horarios ON agendamentos_clientes.horario_id = horarios.id
+        LEFT JOIN users ON agendamentos_clientes.user_id = users.id
+        LEFT JOIN instrutor_horario ih ON horarios.id = ih.horario_id
+        LEFT JOIN users instrutor ON ih.user_id = instrutor.id
+        WHERE agendamentos_clientes.user_id = :id
+        GROUP BY agendamentos_clientes.id, instrutor.id",
             [
                 ':id' => $id
             ]
         );
-        
+
         return $user_horarios;
     }
 
@@ -490,19 +526,20 @@ class AgendaModel extends Model
     public function get_recent_appointments($id_horario)
     {
         $query = 'SELECT 
-        users.id AS user_id, 
-        users.nome, 
-        users.telefone,
-        horarios.dia_semana, 
-        horarios.horario_inicio, 
-        horarios.horario_fim,
-        agendamentos_clientes.status_agendamento,
-        agendamentos_clientes.created_at AS data_agendamento
+            users.id AS user_id, 
+            users.nome, 
+            users.telefone,
+            horarios.dia_semana, 
+            horarios.horario_inicio, 
+            horarios.horario_fim,
+            agendamentos_clientes.status_agendamento,
+            agendamentos_clientes.created_at AS data_agendamento
         FROM agendamentos_clientes
         INNER JOIN users ON users.id = agendamentos_clientes.user_id
         INNER JOIN horarios ON horarios.id = agendamentos_clientes.horario_id
         WHERE agendamentos_clientes.horario_id = :horario_id
-        AND agendamentos_clientes.status_agendamento = "ativo"';
+        AND (agendamentos_clientes.status_agendamento = "agendado" 
+             OR agendamentos_clientes.status_agendamento = "confirmado")';
 
         $params = [":horario_id" => $id_horario];
 
@@ -511,17 +548,143 @@ class AgendaModel extends Model
         return $results;
     }
 
-    public function get_horario_by_id(int $id) {
+    public function get_horario_by_id(int $id)
+    {
         return $this->selectFrom('horarios', '*', [], ['id' => $id], [], 1);
     }
 
-    public function get_agendamento_by_id($id) {
+    public function get_agendamento_by_id($id)
+    {
         return $this->database->execute_query(
             'SELECT horarios.dia_semana, horarios.horario_inicio, horarios.horario_fim, agendamentos_clientes.status_agendamento, agendamentos_clientes.user_id, agendamentos_clientes.observacoes, agendamentos_clientes.motivo_cancelamento, agendamentos_clientes.created_at 
         FROM agendamentos_clientes
         LEFT JOIN horarios ON horarios.id = horario_id
         WHERE agendamentos_clientes.id = :id',
-        [':id' => $id]);
-    } 
+            [':id' => $id]
+        );
+    }
+    public function get_agendamentos_do_dia_atual()
+    {
+        // Obtém o dia da semana atual em português (igual ao formato do seu banco)
+        $dia_semana_atual = strtolower(date('l'));
+        $dias_semana_map = [
+            'monday' => 'segunda-feira',
+            'tuesday' => 'terca-feira',
+            'wednesday' => 'quarta-feira',
+            'thursday' => 'quinta-feira',
+            'friday' => 'sexta-feira',
+            'saturday' => 'sabado',
+            'sunday' => 'domingo'
+        ];
+        $dia_hoje = $dias_semana_map[$dia_semana_atual] ?? '';
 
+        if (empty($dia_hoje)) {
+            return (object) [
+                "status" => "error",
+                "message" => "Não foi possível determinar o dia da semana"
+            ];
+        }
+
+        $query = "SELECT 
+                    ac.id as agendamento_id,
+                    u.id as user_id,
+                    u.nome as cliente_nome,
+                    u.email as cliente_email,
+                    u.telefone as cliente_telefone,
+                    h.dia_semana,
+                    DATE_FORMAT(h.horario_inicio, '%H:%i') as horario_inicio,
+                    DATE_FORMAT(h.horario_fim, '%H:%i') as horario_fim,
+                    ac.status_agendamento,
+                    ac.observacoes,
+                    ac.created_at as data_agendamento
+                FROM 
+                    agendamentos_clientes ac
+                INNER JOIN 
+                    users u ON ac.user_id = u.id
+                INNER JOIN 
+                    horarios h ON ac.horario_id = h.id
+                WHERE 
+                    h.dia_semana = :dia_semana
+                    AND (ac.status_agendamento = 'agendado' 
+                    OR ac.status_agendamento = 'confirmado' OR ac.status_agendamento IS NULL)
+                ORDER BY 
+                    h.horario_inicio ASC";
+
+        $params = [":dia_semana" => $dia_hoje];
+
+        return $this->database->execute_query($query, $params);
+    }
+
+    public function get_ultimos_agendamentos($limit = 10)
+    {
+        $limit = (int)$limit;
+
+        $query = "SELECT 
+                ac.id as agendamento_id,
+                u.nome as cliente_nome,
+                u.email as cliente_email,
+                u.telefone as cliente_telefone,
+                h.dia_semana,
+                DATE_FORMAT(h.horario_inicio, '%H:%i') as horario_inicio,
+                DATE_FORMAT(h.horario_fim, '%H:%i') as horario_fim,
+                ac.status_agendamento,
+                ac.observacoes,
+                DATE_FORMAT(ac.created_at, '%d/%m/%Y %H:%i') as data_agendamento_formatada,
+                ac.created_at
+            FROM 
+                agendamentos_clientes ac
+            INNER JOIN 
+                users u ON ac.user_id = u.id
+            INNER JOIN 
+                horarios h ON ac.horario_id = h.id
+                WHERE (ac.status_agendamento = 'agendado' 
+                    OR ac.status_agendamento = 'confirmado' OR ac.status_agendamento IS NULL)
+            ORDER BY 
+                ac.created_at DESC
+            LIMIT " . $limit;
+
+        return $this->database->execute_query($query, []);
+    }
+
+    public function get_instructor_horarios(int $id)
+    {
+        return $this->database->execute_query(
+            "SELECT 
+            h.id,
+            h.dia_semana,
+            DATE_FORMAT(h.horario_inicio, '%H:%i') as horario_inicio,
+            DATE_FORMAT(h.horario_fim, '%H:%i') as horario_fim,
+            CONCAT(
+                DATE_FORMAT(h.horario_inicio, '%H:%i'),
+                ' – ',
+                DATE_FORMAT(h.horario_fim, '%H:%i')
+            ) as horario_formatado,
+            COUNT(ac.id) as total_agendamentos,
+            SUM(CASE WHEN ac.status_agendamento = 'agendado' THEN 1 ELSE 0 END) as agendamentos_ativos,
+            SUM(CASE WHEN ac.status_agendamento = 'confirmado' THEN 1 ELSE 0 END) as agendamentos_confirmados,
+            SUM(CASE WHEN ac.status_agendamento = 'cancelado' THEN 1 ELSE 0 END) as agendamentos_cancelados
+        FROM 
+            instrutor_horario ih
+        JOIN 
+            horarios h ON ih.horario_id = h.id
+        LEFT JOIN 
+            agendamentos_clientes ac ON h.id = ac.horario_id
+        WHERE 
+            ih.user_id = :instructor_id
+        GROUP BY 
+            h.id, h.dia_semana, h.horario_inicio, h.horario_fim
+        ORDER BY 
+            CASE h.dia_semana 
+                WHEN 'segunda-feira' THEN 1 
+                WHEN 'terca-feira' THEN 2 
+                WHEN 'quarta-feira' THEN 3 
+                WHEN 'quinta-feira' THEN 4 
+                WHEN 'sexta-feira' THEN 5 
+                WHEN 'sabado' THEN 6 
+                WHEN 'domingo' THEN 7 
+            END,
+            h.horario_inicio",
+            [':instructor_id' => $id]
+        );
+    }
 }

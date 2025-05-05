@@ -1,6 +1,5 @@
 <?php include('components/head.php') ?>
 <?php include('components/client-top-bar.php') ?>
-
 <body>
 
     <?php include('components/overlay.php'); ?>

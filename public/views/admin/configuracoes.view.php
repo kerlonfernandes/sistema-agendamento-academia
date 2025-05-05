@@ -90,7 +90,7 @@
                                     <label for="imagem_formulario" class="form-label">Imagem do Formulário</label>
                                     <input type="file" class="form-control" id="imagem_formulario" name="imagem_formulario">
                                     <div class="mt-2">
-                                        <img src="<?= IMAGES . "/" . $imagem_formulario ?>" alt="Imagem atual" style="max-height: 100px;" id="imagemPreview">
+                                        <img src="<?= IMAGES . "/" . $imagem_formulario ?>" class="w-100" alt="Imagem atual" style="max-height: 100px;" id="imagemPreview">
                                     </div>
                                 </div>
 
@@ -108,6 +108,13 @@
                                     <label for="limite_agendamentos" class="form-label">Limite de Agendamentos por Dia</label>
                                     <input type="number" class="form-control" id="limite_agendamentos" name="limite_agendamentos" value="<?= $limite_agendamentos ?>" min="1">
                                     <div class="aviso"></div>
+
+                                    <div class="alert alert-warning d-flex align-items-center mt-3" role="alert">
+                                        <i class="bi bi-alert"></i>
+                                        <div>
+                                        <i class="bi bi-exclamation-circle-fill"></i> O sistema irá marcar automaticamente como concluídos todos os horários que tiverem mais de <strong><?= $metade ?></strong> de agendamentos.
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-4">

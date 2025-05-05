@@ -90,6 +90,37 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Informações do Cliente</h5>
+                            <!-- Adicione esta seção logo abaixo do <h5 class="card-title">Informações do Cliente</h5> -->
+                            <div class="text-center mb-4">
+                                <?php if ($_SESSION['accessLevel'] >= 4 || ($_SESSION['accessLevel'] == 2 && $client_id == $_SESSION['userId'])): ?>
+                                    <form id="profileImageForm" action="<?= SITE ?>/upload-profile-image" method="POST" enctype="multipart/form-data">
+                                        <input type="hidden" name="user_id" value="<?= $client_id ?>">
+                                        <input type="file" id="profileImageInput" name="profile_img" accept="image/*" style="display: none;">
+
+                                        <div class="profile-image-container" style="cursor: pointer; display: inline-block;">
+                                            <img id="profileImagePreview"
+                                                src="<?= !empty($usuario->profile_img) ? $usuario->profile_img : 'https://ui-avatars.com/api/?name=' . urlencode($usuario->nome) . '&background=random&size=150' ?>"
+                                                class="rounded-circle border"
+                                                width="150"
+                                                height="150"
+                                                alt="Foto de perfil"
+                                                onclick="document.getElementById('profileImageInput').click()">
+                                            <div class="overlay-text" style="">
+                                                Para alterar a imagem, clique na imagem.
+                                            </div>
+                                        </div>
+                                    </form>
+                                <?php else: ?>
+                                    <div style="display: inline-block;">
+                                        <img id="profileImagePreview"
+                                            src="<?= !empty($usuario->profile_img) ? $usuario->profile_img : 'https://ui-avatars.com/api/?name=' . urlencode($usuario->nome) . '&background=random&size=150' ?>"
+                                            class="rounded-circle border"
+                                            width="150"
+                                            height="150"
+                                            alt="Foto de perfil">
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                             <form method="POST" action="<?= SITE ?>/admin/configuracoes/editar/usuario">
                                 <input type="hidden" name="id" value="<?= $client_id ?>">
                                 <input type="hidden" name="back_url" value="<?= current_url() ?>">
@@ -98,38 +129,69 @@
                                     <div class="col-md-6">
                                         <div class="info-item">
                                             <strong>Nome:</strong>
-                                            <input type="text" class="form-control" name="nome" value="<?= $usuario->nome ?? 'N/A' ?>">
+                                            <?php if ($_SESSION['accessLevel'] >= 4): ?>
+                                                <input type="text" class="form-control" name="nome" value="<?= $usuario->nome ?? 'N/A' ?>">
+                                            <?php else: ?>
+                                                <input type="text" class="form-control" value="<?= $usuario->nome ?? 'N/A' ?>" readonly>
+                                                <input type="hidden" name="nome" value="<?= $usuario->nome ?? '' ?>">
+                                            <?php endif; ?>
                                         </div>
                                         <div class="info-item">
                                             <strong>Telefone:</strong>
-                                            <input type="text" class="form-control celular" name="telefone" value="<?= $usuario->telefone ?? 'N/A' ?>">
+                                            <?php if ($_SESSION['accessLevel'] >= 4): ?>
+                                                <input type="text" class="form-control celular" name="telefone" value="<?= $usuario->telefone ?? 'N/A' ?>">
+                                            <?php else: ?>
+                                                <input type="text" class="form-control" value="<?= $usuario->telefone ?? 'N/A' ?>" readonly>
+                                                <input type="hidden" name="telefone" value="<?= $usuario->telefone ?? '' ?>">
+                                            <?php endif; ?>
                                         </div>
                                         <div class="info-item">
-                                        <strong>Nível de acesso:</strong>
-                                        <select name="nivel_acesso" class="form-select">
-                                               <option value="1" <?= $usuario->nivel_acesso == 1 ? "selected" : ""?>>Usuário</option>
-                                               <option value="4" <?= $usuario->nivel_acesso == 4 ? "selected" : ""?>>Administrador</option>
-                                        </select>
+                                            <strong>Nível de acesso:</strong>
+                                            <?php if ($_SESSION['accessLevel'] >= 4): ?>
+                                                <select name="nivel_acesso" class="form-select">
+                                                    <option value="1" <?= $usuario->nivel_acesso == 1 ? "selected" : "" ?>>Usuário</option>
+                                                    <option value="2" <?= $usuario->nivel_acesso == 2 ? "selected" : "" ?>>Instrutor</option>
+                                                    <option value="4" <?= $usuario->nivel_acesso == 4 ? "selected" : "" ?>>Administrador</option>
+                                                </select>
+                                            <?php else: ?>
+                                                <input type="text" class="form-control" value="<?=
+                                                                                                $usuario->nivel_acesso == 1 ? 'Usuário' : ($usuario->nivel_acesso == 2 ? 'Instrutor' : 'Administrador')
+                                                                                                ?>" readonly>
+                                                <input type="hidden" name="nivel_acesso" value="<?= $usuario->nivel_acesso ?>">
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="info-item">
                                             <strong>CPF:</strong>
-                                            <input type="text" class="form-control cpfcnpj" name="cpf" value="<?= isset($usuario->cpf) ? formatarCPF($usuario->cpf) : 'N/A' ?>">
+                                            <?php if ($_SESSION['accessLevel'] >= 4): ?>
+                                                <input type="text" class="form-control cpfcnpj" name="cpf" value="<?= isset($usuario->cpf) ? formatarCPF($usuario->cpf) : 'N/A' ?>">
+                                            <?php else: ?>
+                                                <input type="text" class="form-control" value="<?= isset($usuario->cpf) ? formatarCPF($usuario->cpf) : 'N/A' ?>" readonly>
+                                                <input type="hidden" name="cpf" value="<?= $usuario->cpf ?? '' ?>">
+                                            <?php endif; ?>
                                         </div>
                                         <div class="info-item">
                                             <strong>Email:</strong>
-                                            <input type="text" class="form-control" name="email" value="<?= $usuario->email ?? 'N/A' ?>">
+                                            <?php if ($_SESSION['accessLevel'] >= 4): ?>
+                                                <input type="text" class="form-control" name="email" value="<?= $usuario->email ?? 'N/A' ?>">
+                                            <?php else: ?>
+                                                <input type="text" class="form-control" value="<?= $usuario->email ?? 'N/A' ?>" readonly>
+                                                <input type="hidden" name="email" value="<?= $usuario->email ?? '' ?>">
+                                            <?php endif; ?>
                                         </div>
                                         <div class="info-item">
                                             <strong>Vínculo:</strong>
-                                            <select name="vinculo" class="form-select">
-                                                <?php foreach ($vinculos as $label => $vinculo): ?>
-                                                    <option value="<?= $label ?>" <?php if ($usuario->vinculo == $label) {
-                                                                                        echo 'selected';
-                                                                                    } ?>><?= $label ?></option>
-                                                <?php endforeach ?>
-                                            </select>
+                                            <?php if ($_SESSION['accessLevel'] >= 4): ?>
+                                                <select name="vinculo" class="form-select">
+                                                    <?php foreach ($vinculos as $label => $vinculo): ?>
+                                                        <option value="<?= $label ?>" <?= $usuario->vinculo == $label ? 'selected' : '' ?>><?= $label ?></option>
+                                                    <?php endforeach ?>
+                                                </select>
+                                            <?php else: ?>
+                                                <input type="text" class="form-control" value="<?= $usuario->vinculo ?? 'N/A' ?>" readonly>
+                                                <input type="hidden" name="vinculo" value="<?= $usuario->vinculo ?? '' ?>">
+                                            <?php endif; ?>
                                         </div>
                                         <div class="info-item">
                                             <strong>Data de Cadastro:</strong>
@@ -137,12 +199,66 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button class="btn btn-primary" type="submit">Salvar</button>
+
+                                <?php if ($_SESSION['accessLevel'] >= 4): ?>
+                                    <button class="btn btn-primary" type="submit">Salvar</button>
+                                <?php endif; ?>
                             </form>
                         </div>
                     </div>
                 </div>
+                <?php if ($instrutor != null && $instrutor->affected_rows > 0 && $usuario->nivel_acesso >= 2): ?>
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Responsável por</h5>
+                                <div class="table-responsive">
+                                    <table id="instrutorTable" class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Dia da semana</th>
+                                                <th>Horário</th>
+                                                <th class="text-center">Total</th>
+                                                <th class="text-center">Ativos</th>
+                                                <th class="text-center">Confirmados</th>
+                                                <th class="text-center">Cancelados</th>
+                                                <th class="text-center">#</th>
 
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($instrutor->results as $h): ?>
+                                                <tr class="hover-row">
+                                                    <td onclick="window.location='<?= SITE ?>/admin/acompanhamento/?h=<?= $h->id ?>'"><?= ucfirst($h->dia_semana) ?></td>
+                                                    <td onclick="window.location='<?= SITE ?>/admin/acompanhamento/?h=<?= $h->id ?>'"><?= $h->horario_formatado ?></td>
+                                                    <td onclick="window.location='<?= SITE ?>/admin/acompanhamento/?h=<?= $h->id ?>'" class="text-center">
+                                                        <span class="badge bg-primary"><?= $h->total_agendamentos ?></span>
+                                                    </td>
+                                                    <td onclick="window.location='<?= SITE ?>/admin/acompanhamento/?h=<?= $h->id ?>'" class="text-center">
+                                                        <span class="badge bg-info"><?= $h->agendamentos_ativos ?></span>
+                                                    </td>
+                                                    <td onclick="window.location='<?= SITE ?>/admin/acompanhamento/?h=<?= $h->id ?>'" class="text-center">
+                                                        <span class="badge bg-success"><?= $h->agendamentos_confirmados ?></span>
+                                                    </td>
+                                                    <td onclick="window.location='<?= SITE ?>/admin/acompanhamento/?h=<?= $h->id ?>'" class="text-center">
+                                                        <span class="badge bg-danger"><?= $h->agendamentos_cancelados ?></span>
+                                                    </td>
+                                                    <td class="text-center"><a href="<?= SITE ?>/admin/instrutor/remover/horario/?id=<?= $h->id ?>&bkurl=<?= SITE ?>/admin/usuario/detalhes/<?= $client_id ?>" class="btn btn-danger">Remover</a></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php elseif ($usuario->nivel_acesso >= 2): ?>
+                    <div class="col-lg-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Nenhum horário atribuído a este instrutor.
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <!-- Appointments Table -->
                 <div class="col-lg-12">
                     <div class="card">
@@ -168,11 +284,11 @@
                                                     <td><?= date('H:i', strtotime($horario->horario_inicio)) ?> - <?= date('H:i', strtotime($horario->horario_fim)) ?></td>
                                                     <td>
                                                         <span class="badge bg-<?=
-                                                                                ($horario->status_agendamento == 'ativo') ? 'primary' : (($horario->status_agendamento == 'concluido') ? 'success' : (($horario->status_agendamento == 'cancelado') ? 'danger' :
+                                                                                ($horario->status_agendamento == 'agendado') ? 'primary' : (($horario->status_agendamento == 'confirmado') ? 'success' : (($horario->status_agendamento == 'cancelado') ? 'danger' :
                                                                                     'secondary'))
                                                                                 ?>">
                                                             <i class="bi <?=
-                                                                            ($horario->status_agendamento == 'ativo') ? 'bi-play-circle' : (($horario->status_agendamento == 'concluido') ? 'bi-check-circle' : (($horario->status_agendamento == 'cancelado') ? 'bi-x-circle' :
+                                                                            ($horario->status_agendamento == 'agendado') ? 'bi-play-circle' : (($horario->status_agendamento == 'confirmado') ? 'bi-check-circle' : (($horario->status_agendamento == 'cancelado') ? 'bi-x-circle' :
                                                                                 'bi-pause-circle'))
                                                                             ?>"></i>
                                                             <?= ucfirst($horario->status_agendamento) ?>
@@ -183,8 +299,17 @@
                                                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-id="<?= $horario->agendamento_id ?>" data-bs-target="#editar-horario">
                                                             <i class="fa fa-pencil"></i> Editar
                                                         </button>
-                                                        <a class="btn btn-sm btn-danger" href="<?= SITE ?>/admin/deletar/agendamento/?id=<?= $horario->id ?>&back_url=<?= SITE ?>/admin/usuario/detalhes/<?= $client_id ?>"><i class="fa fa-trash"></i> Deletar</a>
+                                                        <?php if (
+                                                            isset($_SESSION['userId']) &&
+                                                            !empty($_SESSION['userId']) &&
+                                                            ($_SESSION['loggedAdmin'] ?? false) === true &&
+                                                            ($_SESSION['admin'] ?? false) === true
+                                                            && (!empty($_SESSION['accessLevel']) || isset($_SESSION['accessLevel']))
+                                                            && $_SESSION['accessLevel'] >= 4
+                                                        ): ?>
+                                                            <a class="btn btn-sm btn-danger" href="<?= SITE ?>/admin/deletar/agendamento/?id=<?= $horario->id ?>&back_url=<?= SITE ?>/admin/usuario/detalhes/<?= $client_id ?>"><i class="fa fa-trash"></i> Deletar</a>
                                                     </td>
+                                                <?php endif; ?>
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php else: ?>
@@ -245,3 +370,88 @@
 
     <!-- Vendor JS Files -->
     <?php include("components/admin-main-js.php") ?>
+
+    <script>
+        document.getElementById('profileImageInput').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function(e) {
+                    document.getElementById('profileImagePreview').src = e.target.result;
+
+                    var preview = document.getElementById('profileImagePreview');
+                    preview.style.opacity = '0.7';
+
+                    var form = document.getElementById('profileImageForm');
+                    var formData = new FormData(form);
+
+                    fetch(form.action, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                if (data.new_url) {
+                                    preview.src = data.new_url;
+                                }
+                                // Mostrar mensagem de sucesso
+                                showAlert('success', 'Foto atualizada com sucesso!');
+                            } else {
+                                showAlert('danger', data.message || 'Erro ao atualizar foto');
+                            }
+                            preview.style.opacity = '1';
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showAlert('danger', 'Erro ao processar a requisição');
+                            preview.style.opacity = '1';
+                        });
+                }
+
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '1100';
+            alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+            document.body.appendChild(alertDiv);
+
+            // Remover após 5 segundos
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+
+    <style>
+        .profile-image-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .overlay-text {
+            margin-top: 5px;
+            padding: 4px;
+
+        }
+        .profile-image-container:hover .overlay-text {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .profile-image-container:hover img {
+            opacity: 0.9;
+        }
+    </style>

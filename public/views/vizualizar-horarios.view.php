@@ -1,6 +1,28 @@
 <?php include('components/head.php') ?>
 <?php include('components/client-top-bar.php') ?>
+<style>
+    .instrutor-info-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 
+.instrutor-img-inline {
+    width: 40px; /* Tamanho da imagem */
+    height: 40px; /* Tamanho da imagem */
+    border-radius: 50%; /* Deixa a imagem circular */
+    object-fit: cover; /* Faz a imagem cobrir totalmente o espaço */
+    margin-right: 8px; /* Espaço entre a imagem e o nome */
+}
+
+.instrutor-nome-inline {
+    font-size: 14px; /* Tamanho do nome */
+    font-weight: bold; /* Torna o nome em negrito */
+    color: #333; /* Cor do nome */
+    white-space: nowrap; /* Impede que o nome quebre em várias linhas */
+}
+
+</style>
 <body>
     <?php include('components/overlay.php'); ?>
 
@@ -47,6 +69,7 @@
                                     <th class="text-center"><i class="bi bi-calendar-date"></i> Dia da semana</th>
                                     <th class="text-center"><i class="bi bi-clock"></i> Horário</th>
                                     <th class="text-center"><i class="bi bi-info-circle"></i> Status</th>
+                                    <th class="text-center"><i class="bi bi-person"></i> Instrutor</th>
                                     <th class="text-center"><i class="bi bi-gear"></i> Ações</th>
                                 </tr>
                             </thead>
@@ -89,7 +112,6 @@
                                                 <span class="badge 
                                         <?php
                                         switch (strtolower($horario->status_agendamento)) {
-                                            case 'ativo':
                                             case 'confirmado':
                                             case 'aprovado':
                                                 echo 'bg-success';
@@ -108,7 +130,9 @@
                                                 break;
 
                                             case 'finalizado':
-                                            case 'concluído':
+                                            case 'Confirmado':
+                                            case 'agendado':
+
                                                 echo 'bg-primary';
                                                 break;
 
@@ -124,6 +148,18 @@
                                                     <?= ucfirst($horario->status_agendamento) ?>
                                                 </span>
                                             </td>
+                                            <td class="text-center">
+                                                <?php if (!empty($horario->instrutor_id) || $horario->instrutor_id != null): ?>
+                                                    <div class="instrutor-info-inline">
+                                                        <img src="<?= $horario->instrutor_profile_img ?>" alt="Imagem do Instrutor" class="instrutor-img-inline">
+                                                        <span class="instrutor-nome-inline"><?= $horario->instrutor_primeiro_nome ?></span>
+                                                    </div>
+
+                                                <?php else: ?>
+                                                    <span>Não informado</span>
+                                                <?php endif; ?>
+                                            </td>
+
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-outline-primary btn-detalhes" data-id="<?= $this->helpers->encodeURL($horario->id) ?>" title="Visualizar">
                                                     Detalhes
@@ -153,7 +189,7 @@
 
     <script>
         $(document).ready(function() {
-           
+
         });
     </script>
 </body>

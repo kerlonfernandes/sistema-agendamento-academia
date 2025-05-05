@@ -23,6 +23,11 @@ $Admin = [
     "/admin/relatorio/gerar" => "RelatoriosController@gerar_relatorio",
     "/admin/acompanhamento" => "AdminController@acompanhamento_view",
     "/admin/usuario/set/status" => "AdminController@usuario_set_status",
-    "/admin/deletar/agendamento" => "AdminController@deleta_agendamento"
+    "/admin/deletar/agendamento" => "AdminController@deleta_agendamento",
+    "/admin/resolver/agendamentos" => "AdminController@resolver_agendamentos",
+    "/admin/instrutores" => "AdminController@instrutores",
+    "/admin/instrutor/remover/horario" => "AdminController@instrutor_remover_horario"
+
+
 
 ];

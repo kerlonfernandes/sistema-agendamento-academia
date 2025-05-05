@@ -81,7 +81,8 @@ class RelatoriosController extends Base
                 'Horário Início', 
                 'Horário Fim', 
                 'Data do Agendamento', 
-                'Status'
+                'Status',
+                'Observação'
             ];
             
             $sheet->fromArray($headers, null, 'A3');
@@ -96,7 +97,8 @@ class RelatoriosController extends Base
                          horarios.dia_semana,
                          horarios.horario_inicio,
                          horarios.horario_fim,
-                         horarios.created_at AS "Dia do Agendamento",
+                         agendamentos_clientes.created_at AS "Dia do Agendamento",
+                         agendamentos_clientes.observacoes,
                          agendamentos_clientes.status_agendamento 
                          FROM agendamentos_clientes 
                          LEFT JOIN horarios ON horarios.id = agendamentos_clientes.horario_id
@@ -133,6 +135,7 @@ class RelatoriosController extends Base
                         $sheet->setCellValue('F' . $row, $dataFormatada);
                         
                         $sheet->setCellValue('G' . $row, $agendamento->status_agendamento);
+                        $sheet->setCellValue('H' . $row, $agendamento->observacoes);
                         $row++;
                     }
                 }

@@ -10,32 +10,31 @@
     <?php include('components/overlay.php'); ?>
 
     <style>
-    .search-container input {
-        width: 300px !important;
-        margin-left: auto;
-        display: block;
-    }
-    
-    .dt-actions {
-        white-space: nowrap;
-        text-align: center !important;
-    }
-    
-    .dt-actions .btn {
-        margin: 2px;
-    }
-    
-    @media (max-width: 768px) {
         .search-container input {
-            width: 100% !important;
+            width: 300px !important;
+            margin-left: auto;
+            display: block;
         }
-        
+
         .dt-actions {
-            width: auto !important;
+            white-space: nowrap;
+            text-align: center !important;
         }
-    }
-    
-</style>
+
+        .dt-actions .btn {
+            margin: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .search-container input {
+                width: 100% !important;
+            }
+
+            .dt-actions {
+                width: auto !important;
+            }
+        }
+    </style>
     <main id="main" class="main">
 
         <div class="pagetitle">
@@ -56,47 +55,56 @@
                                 <div class="card-body">
                                     <h5 class="card-title">Lista de Clientes</h5>
                                     <?php if ($agendamentos->affected_rows <= 0): ?>
-                                            <span class="text-center">Nenhum agendamento foi feito ainda</span>
+                                        <span class="text-center">Nenhum agendamento foi feito ainda</span>
                                     <?php else: ?>
-                                    <table id="agendamentosTable" class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>Nome</th>
-                                                <th>Email</th>
-                                                <th>Telefone</th>
-                                                <th>Horários Agendados</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php if ($agendamentos->affected_rows > 0): ?>
-                                                <?php foreach ($agendamentos->results as $agendamento): ?>
+                                        <div class="table-responsive">
+                                            <table id="agendamentosTable" class="table table-striped">
+                                                <thead>
                                                     <tr>
-                                                        <td><?= $agendamento->user_id ?></td>
-                                                        <td><?= $agendamento->nome ?></td>
-                                                        <td><?= $agendamento->email ?></td>
-                                                        <td><?= $agendamento->telefone ?></td>
-                                                        <td>
-                                                            <span class="badge bg-primary">
-                                                                <?= $agendamento->total_horarios ?> horário(s)
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            
-                                                            <a href="<?= SITE ?>/admin/usuario/detalhes/<?= $agendamento->user_id ?>" class="btn btn-sm btn-primary">
-                                                                <i class="bi bi-eye"></i> Detalhes
-                                                            </a>
-                                                        </td>
+                                                        <th class="d-table-cell d-sm-none">Ações</th> <!-- Ações primeiro em mobile -->
+                                                        <th>Nome</th>
+                                                        <th>Email</th>
+                                                        <th>Telefone</th>
+                                                        <th>Horários Agendados</th>
+                                                        <th class="d-none d-sm-table-cell">Ações</th> <!-- Ações normal em telas grandes -->
                                                     </tr>
-                                                <?php endforeach; ?>
-                                            <?php else: ?>
-                                                <tr>
-                                                    <td colspan="6" class="text-center">Nenhum agendamento encontrado</td>
-                                                </tr>
-                                            <?php endif; ?>
-                                        </tbody>
-                                    </table>
+                                                </thead>
+                                                <tbody>
+                                                    <?php if ($agendamentos->affected_rows > 0): ?>
+                                                        <?php foreach ($agendamentos->results as $agendamento): ?>
+                                                            <tr>
+                                                                <td class="d-table-cell d-sm-none">
+                                                                    <a href="<?= SITE ?>/admin/usuario/detalhes/<?= $agendamento->user_id ?>" class="btn btn-sm btn-primary">
+                                                                        <i class="bi bi-eye"></i>
+                                                                    </a>
+                                                                </td>
+                                                                <td>
+                                                                        <?= $agendamento->nome ?>
+                                                                </td>
+                                                                <td><?= $agendamento->email ?></td>
+                                                                <td><?= $agendamento->telefone ?></td>
+                                                                <td>
+                                                                    <span class="badge bg-primary">
+                                                                        <?= $agendamento->total_horarios ?> horário(s)
+                                                                    </span>
+                                                                </td>
+                                                                <td class="d-none d-sm-table-cell">
+                                                                    <a href="<?= SITE ?>/admin/usuario/detalhes/<?= $agendamento->user_id ?>" class="btn btn-sm btn-primary">
+                                                                        <i class="bi bi-eye"></i> Detalhes
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+
+                                                        <?php endforeach; ?>
+                                                    <?php else: ?>
+                                                        <tr>
+                                                            <td colspan="7" class="text-center">Nenhum agendamento encontrado</td>
+                                                        </tr>
+                                                    <?php endif; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
                                     <?php endif; ?>
 
                                 </div>

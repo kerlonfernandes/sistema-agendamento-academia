@@ -30,16 +30,54 @@ class AdminController extends Base
 
     public function index()
     {
+        $horario_proximo = $this->encontrar_horario_atual();
+        $horario_inicio = $horario_proximo['horario']->horario_inicio;
+        $horario_fim = $horario_proximo['horario']->horario_fim;
+        $agendamentos_qtd = $this->agendaModel->get_agendamentos_qtd()->affected_rows;
+        $total_usuarios = $this->internModel->get_users()->affected_rows;
+        $users_do_mes = $this->internModel->get_usuarios_do_mes()->affected_rows;
+        $agendamentos_hoje = $this->agendaModel->get_agendamentos_do_dia_atual();
+        $ultimos_agendamentos = $this->agendaModel->get_ultimos_agendamentos(10);
 
         $this->view('admin/index', [
-            'title' => "Admin"
+            'title' => "Admin | Dashboard",
+            'proximo_horario' => "$horario_inicio - $horario_fim",
+            'agendamentos_ativos' => $agendamentos_qtd,
+            'total_usuarios' => $total_usuarios,
+            'novos_usuarios' => $users_do_mes,
+            'total_agendamentos_hoje' => $agendamentos_hoje->affected_rows,
+            'agendamentos_hoje' => $agendamentos_hoje,
+            'ultimos_agendamentos' => $ultimos_agendamentos
         ]);
     }
 
     // APPLICAÇÃO
+    
+    public function resolver_agendamentos() {
+
+        $horarios_cadastrados = $this->agendaModel->get_dias_semana();
+
+        $this->view('admin/resolver', [
+            "title" => "Admin | Resolver horários",
+            "horarios" => $horarios_cadastrados
+        ]);
+    }
+    public function instrutores() {
+
+        $horarios_cadastrados = $this->agendaModel->get_dias_semana();
+
+        $this->view('admin/instrutores', [
+            "title" => "Admin | Instrutores",
+            "horarios" => $horarios_cadastrados
+        ]);
+    }
 
     public function configuracoes_view()
     {
+
+        $this->checkAcess(4, function() {
+            $this->helpers->redirect(SITE."/admin");
+        });        
 
         $configuracoes          = $this->internModel->get_configuracoes()->results[0];
         $imagem_formulario      = $configuracoes->imagem_formulario;
@@ -51,6 +89,12 @@ class AdminController extends Base
         $dias_funcionamento     = json_decode($configuracoes->dias_funcionamento);
         $formulario_ativo       = $configuracoes->formulario_ativo;
 
+         $metade = floor($limite_agendamentos / 2);
+ 
+         if ($limite_agendamentos / 2 > $metade) {
+             $metade = ceil($limite_agendamentos / 2);
+         }
+ 
         $horarios_funcionamento = $this->agendaModel->get_horarios_cadastrados()->results;
 
         $this->view('admin/configuracoes', [
@@ -63,12 +107,16 @@ class AdminController extends Base
             'limite_agendamentos'    => $limite_agendamentos,
             'formulario_ativo'       => $formulario_ativo,
             'horarios_funcionamento' => $horarios_funcionamento,
+            'metade'                 => $metade,
             'title'                  => "Configurações"
         ]);
     }
 
     public function relatorio_view()
     {
+        $this->checkAcess(4, function() {
+            $this->helpers->redirect(SITE."/admin");
+        });    
 
         $configuracoes          = $this->internModel->get_configuracoes()->results[0];
         $dias_funcionamento     = $this->internModel->get_dias_funcionamento()->results[0];
@@ -794,4 +842,36 @@ class AdminController extends Base
             $this->helpers->redirect($back_url);
         }
     }
+
+    public function instrutor_remover_horario() {
+        $get = Get();
+        $id = $get->id;
+        $back_url = $get->bkurl;
+
+        $results = $this->internModel->deleteFrom('instrutor_horario', ['horario_id' => $id]);
+
+        if ($results->status == 'error') {
+
+            $_SESSION['alert_message'] = [
+                'type' => 'danger',
+                'title' => 'Erro!',
+                'message' => 'Não foi possível remover o horário da sua lista de horários.',
+                'dismissible' => true,
+                'open_colapse' => true
+            ];
+
+            $this->helpers->redirect($back_url);
+        }
+
+        $_SESSION['alert_message'] = [
+            'type' => 'success',
+            'title' => 'Sucesso!',
+            'message' => 'Horário removido com sucesso!',
+            'dismissible' => true,
+            'open_colapse' => true
+        ];
+
+        $this->helpers->redirect($back_url);
+    }
+
 }

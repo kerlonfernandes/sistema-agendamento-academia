@@ -58,6 +58,9 @@ class AgendamentosController extends Base
         $horarios      = $this->agendaModel->get_user_horarios( $id );
         $configuracoes = $this->internModel->get_configuracoes()->results[0];
         $vinculos      = $this->internModel->get_vinculo_formulario()->results[0];
+        $instrutor     = null;
+        $i             = null;
+
         $arrayVinculos = json_decode( $vinculos->vinculos ?? '{}', true ) ?: [];
 
 
@@ -65,12 +68,18 @@ class AgendamentosController extends Base
             $this->helpers->redirect( SITE . "/admin/usuarios" );
         }
 
+        if($usuario->results[0]->nivel_acesso == 2) {
+            $instrutor = $this->agendaModel->get_instructor_horarios($id);
+        }
+
+
         $this->view( 'admin/detalhe-usuario', [
             'title'     => "UNIVC | Detalhes do Usuário",
             'client_id' => $id,
             'usuario'   => $usuario->results[0],
             'horarios'  => $horarios,
-            'vinculos'  => $arrayVinculos
+            'vinculos'  => $arrayVinculos,
+            'instrutor' => $instrutor
         ]);
     }
     // fim das views

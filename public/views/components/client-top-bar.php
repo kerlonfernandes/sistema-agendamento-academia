@@ -4,12 +4,25 @@
             <!-- Adicione sua logo aqui se desejar -->
         </a>
         <?php
-if (isset($_SESSION['userId']) && 
-    !empty($_SESSION['userId']) && 
-    ($_SESSION['loggedAdmin'] ?? false) === true && 
-    ($_SESSION['admin'] ?? false) === true): ?>
-    <a href="<?= SITE ?>/admin">Painel Administrativo</a>
-<?php endif; ?>
+        if (
+            isset($_SESSION['userId']) &&
+            !empty($_SESSION['userId']) &&
+            ($_SESSION['loggedAdmin'] ?? false) === true &&
+            ($_SESSION['admin'] ?? false) === true 
+            && (!empty($_SESSION['accessLevel']) || isset($_SESSION['accessLevel']))
+            && $_SESSION['accessLevel'] == 4
+        ): ?>
+            <a href="<?= SITE ?>/admin">Painel Administrativo</a>
+        <?php endif; ?>
+        
+        <?php if (
+            isset($_SESSION['userId']) &&
+            !empty($_SESSION['userId']) &&
+            (!empty($_SESSION['accessLevel']) || isset($_SESSION['accessLevel'])) &&
+            $_SESSION['accessLevel'] == 2
+        ): ?>
+            <a href="<?= SITE ?>/admin">Painel Instrutor</a>
+        <?php endif; ?>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>

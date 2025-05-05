@@ -198,4 +198,13 @@ class UserModel extends Model
         return $this->selectFrom('users', "*", [], ['email' => $email], [], 1);
     }
 
+    public function update_profile_image($user_id, $image_path) {
+        return $this->database->execute_query(
+            "UPDATE users SET profile_img = :profile_img WHERE id = :id",
+            [
+                ':profile_img' => $image_path,
+                ':id' => $user_id
+            ]
+        );
+    }
 }

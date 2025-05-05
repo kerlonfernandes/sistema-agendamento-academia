@@ -17,7 +17,7 @@ class MainController extends Base
         $this->userModel    = new UserModel();
         $this->userId       = isset($_SESSION['userId']) ? $_SESSION['userId'] : 0;
         $this->internModel  = new InternModel();
-        $this->agendaModel  = new AgendaModel();  
+        $this->agendaModel  = new AgendaModel();
     }
 
     public function index()
@@ -27,15 +27,14 @@ class MainController extends Base
         $userData = null;
 
         // meu deus
-        if(isset($_SESSION['loggedUser']) && !empty($_SESSION['loggedUser']) && isset($_SESSION['userId']) &&  !empty($_SESSION['userId'])) {
+        if (isset($_SESSION['loggedUser']) && !empty($_SESSION['loggedUser']) && isset($_SESSION['userId']) &&  !empty($_SESSION['userId'])) {
             $user     = new UserModel($_SESSION['userId']);
             $userData = $user->getData();
-            
-            if($userData->affected_rows > 0) {
+
+            if ($userData->affected_rows > 0) {
                 $_SESSION['user'] = $userData->results[0];
                 $userData         = $userData->results[0];
             }
-
         }
 
         $configuracoes = $this->internModel->get_configuracoes()->results[0];
@@ -81,7 +80,7 @@ class MainController extends Base
             $this->helpers->redirect(SITE . "/login");
         }
 
-        if(isset($_GET['keep']) && !empty($_GET['keep'])) {
+        if (isset($_GET['keep']) && !empty($_GET['keep'])) {
             $_SESSION['last_form'] = json_decode($this->helpers->decodeURL($_GET['keep']));
             $_SESSION['after_login'] = 'send_form';
         }
@@ -131,9 +130,14 @@ class MainController extends Base
 
             // Definição da sessão do usuário autenticado
             if ($user->nivel_acesso >= 4) {
+                $_SESSION['accessLevel'] = 4;
                 $_SESSION['admin'] = true;
                 $_SESSION['loggedAdmin'] = true;
-
+            }
+            if ($user->nivel_acesso == 2) {
+                $_SESSION['accessLevel'] = 2;
+                $_SESSION['admin'] = true;
+                $_SESSION['loggedAdmin'] = true;
             }
 
             $_SESSION['userId'] = $user->id;
@@ -158,11 +162,11 @@ class MainController extends Base
                 'samesite' => 'Strict'
             ]);
 
-            $redirect_url = isset($_GET['redirect_back']) 
-            ? $_GET['redirect_back'] 
-            : SITE ;
+            $redirect_url = isset($_GET['redirect_back'])
+                ? $_GET['redirect_back']
+                : SITE;
             // . ($user->nivel_acesso >= 4 ? "/admin" : ""); caso seja logado como admin, redirecionar pro painel. Se quiser que redirecione, é só remover o comentário
-            
+
             $this->helpers->redirect($redirect_url);
         } catch (Exception $e) {
             error_log($e->getMessage());
@@ -185,16 +189,16 @@ class MainController extends Base
     }
 
     public function vizualizar_horarios()
-    {   
+    {
 
         $this->isAuth();
         $id = null;
 
-        if(isset($_SESSION['userId']) || !empty($_SESSION['userId'])) {
+        if (isset($_SESSION['userId']) || !empty($_SESSION['userId'])) {
             $id = $_SESSION['userId'];
         }
 
-        $horarios = $this->agendaModel->user_horarios_client( $id );
+        $horarios = $this->agendaModel->user_horarios_client($id);
 
         $this->view('vizualizar-horarios', [
             'title' => "Vizualização dos horários",
@@ -208,7 +212,7 @@ class MainController extends Base
         $email = null;
         $telefone = null;
 
-        if ( isset($_SESSION['last_form']) || !empty($_SESSION['last_form']) ) {
+        if (isset($_SESSION['last_form']) || !empty($_SESSION['last_form'])) {
             $nome     = json_decode($_SESSION['last_form']->agendamentos)[0]->nome;
             $email    = json_decode($_SESSION['last_form']->agendamentos)[0]->email;
             $telefone = json_decode($_SESSION['last_form']->agendamentos)[0]->telefone;
@@ -243,8 +247,7 @@ class MainController extends Base
             ];
 
             $_SESSION['last_try'] = compact('email', 'name', 'phone');
-            $this->helpers->redirect(SITE . "/cadastrar".(isset($_GET['keep']) ? "?keep=".$_GET['keep'] : ""));
-
+            $this->helpers->redirect(SITE . "/cadastrar" . (isset($_GET['keep']) ? "?keep=" . $_GET['keep'] : ""));
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -256,8 +259,7 @@ class MainController extends Base
             ];
 
             $_SESSION['last_try'] = compact('email', 'name', 'phone');
-            $this->helpers->redirect(SITE . "/cadastrar".(isset($_GET['keep']) ? "?keep=".$_GET['keep'] : ""));
-
+            $this->helpers->redirect(SITE . "/cadastrar" . (isset($_GET['keep']) ? "?keep=" . $_GET['keep'] : ""));
         }
 
         if (!isValidCPF($cpf)) {
@@ -269,9 +271,8 @@ class MainController extends Base
             ];
 
             $_SESSION['last_try'] = compact('email', 'name', 'phone');
-            $this->helpers->redirect(SITE . "/cadastrar".(isset($_GET['keep']) ? "?keep=".$_GET['keep'] : ""));
+            $this->helpers->redirect(SITE . "/cadastrar" . (isset($_GET['keep']) ? "?keep=" . $_GET['keep'] : ""));
             return;
-
         }
 
         $user = $this->userModel->getUserByEmail($email);
@@ -284,8 +285,7 @@ class MainController extends Base
             ];
 
             $_SESSION['last_try'] = compact('email', 'name', 'phone');
-            $this->helpers->redirect(SITE . "/cadastrar".(isset($_GET['keep']) ? "?keep=".$_GET['keep'] : ""));
-
+            $this->helpers->redirect(SITE . "/cadastrar" . (isset($_GET['keep']) ? "?keep=" . $_GET['keep'] : ""));
         }
 
         $r = $this->userModel->createUser(
@@ -305,8 +305,7 @@ class MainController extends Base
             ];
 
             $_SESSION['last_try'] = compact('email', 'name', 'phone');
-            $this->helpers->redirect(SITE . "/cadastrar".(isset($_GET['keep']) ? "?keep=".$_GET['keep'] : ""));
-
+            $this->helpers->redirect(SITE . "/cadastrar" . (isset($_GET['keep']) ? "?keep=" . $_GET['keep'] : ""));
         }
 
         $_SESSION['alert_message'] = [
@@ -315,34 +314,34 @@ class MainController extends Base
             'message' => 'Usuário cadastrado com sucesso. Faça login!',
             'dismissible' => true
         ];
-        $this->helpers->redirect(SITE . "/login".(isset($_GET['keep']) ? "?keep=".$_GET['keep'] : ""));
+        $this->helpers->redirect(SITE . "/login" . (isset($_GET['keep']) ? "?keep=" . $_GET['keep'] : ""));
     }
 
-    public function vizualizar_horarios_usuario() {
+    public function vizualizar_horarios_usuario()
+    {
 
         $this->isAuth();
 
         $get = Get();
 
-        if(!isset($get->id) || empty($get->id)) return; 
+        if (!isset($get->id) || empty($get->id)) return;
 
         $user_id = null;
         $horario = $this->helpers->decodeURL($get->id);
 
-        if(isset($_SESSION['userId']) || !empty($_SESSION['userId'])) {
+        if (isset($_SESSION['userId']) || !empty($_SESSION['userId'])) {
             $user_id = $_SESSION['userId'];
         }
 
         $horario = $this->agendaModel->get_agendamento_by_id($horario);
 
-        if($horario->affected_rows <= 0 ) {
+        if ($horario->affected_rows <= 0) {
             return;
         }
 
         $this->view('load/agendamentos-usuario', [
             "horario" => $horario->results[0]
         ]);
-
     }
 
 
@@ -350,6 +349,8 @@ class MainController extends Base
     {
         $_SESSION = [];
         $_SESSION['loggedUser'] = false;
+        $_SESSION['loggedAdmin'] = false;
+
         session_destroy();
         if (isset($_COOKIE['userId'])) {
             setcookie('userId', '', time() - 3600, '/');
@@ -362,5 +363,58 @@ class MainController extends Base
         }
         header("Location: ./login");
         exit;
+    }
+
+    public function upload_profile_image()
+    {
+        $user_id = $_POST['user_id'] ?? null;
+
+        if (!$user_id) {
+            echo json_encode(['success' => false, 'message' => 'ID do usuário não informado']);
+            return;
+        }
+
+        if (empty($_FILES['profile_img'])) {
+            echo json_encode(['success' => false, 'message' => 'Nenhuma imagem enviada']);
+            return;
+        }
+
+        $file = $_FILES['profile_img'];
+
+        // Validações básicas
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!in_array($file['type'], $allowed_types)) {
+            echo json_encode(['success' => false, 'message' => 'Tipo de arquivo não permitido']);
+            return;
+        }
+
+        // Tamanho máximo (2MB)
+        if ($file['size'] > 2097152) {
+            echo json_encode(['success' => false, 'message' => 'Imagem muito grande (máx. 2MB)']);
+            return;
+        }
+
+        $upload_dir =  'public/uploads/profile_images/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = 'user_' . $user_id . '_' . time() . '.' . $ext;
+        $destination = $upload_dir . $filename;
+
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            // Atualizar no banco de dados
+            $model = new UserModel();
+            $result = $model->update_profile_image($user_id, SITE . '/' . $destination);
+
+            if ($result) {
+                echo json_encode(['success' => true, 'new_url' => SITE . '/' . $destination]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Erro ao atualizar no banco de dados']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erro ao mover o arquivo']);
+        }
     }
 }

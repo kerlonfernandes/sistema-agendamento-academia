@@ -47,11 +47,20 @@
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li><a class="dropdown-item" href="<?= SITE ?>/admin/usuario/detalhes/<?= $usuario->id ?>">Acessar</a></li>
-                                                        <li><a class="dropdown-item del-usr" data-name="<?= $usuario->nome ?>" data-id="<?= $usuario->id ?>" href="#">Deletar</a></li>
+                                                        <?php if (
+                                                            isset($_SESSION['userId']) &&
+                                                            !empty($_SESSION['userId']) &&
+                                                            ($_SESSION['loggedAdmin'] ?? false) === true &&
+                                                            ($_SESSION['admin'] ?? false) === true
+                                                            && (!empty($_SESSION['accessLevel']) || isset($_SESSION['accessLevel']))
+                                                            && $_SESSION['accessLevel'] >= 4
+                                                        ): ?>
+                                                            <li><a class="dropdown-item del-usr" data-name="<?= $usuario->nome ?>" data-id="<?= $usuario->id ?>" href="#">Deletar</a></li>
+                                                        <?php endif; ?>
                                                     </ul>
                                                 </div>
                                             </td>
-                                            <td><strong><?= !empty($usuario->nome) ? htmlspecialchars(substr($usuario->nome, 0, 30)) . (strlen($usuario->nome) > 30 ? '...' : '') : '' ?></strong></td>
+                                            <td><strong><?= !empty($usuario->nome) ? htmlspecialchars(substr($usuario->nome, 0, 30)) . (strlen($usuario->nome) > 30 ? '...' : '') : '' ?><?php if ($usuario->id == $_SESSION['userId']) echo "(Você)" ?></strong></td>
                                             <td><?= !empty($usuario->telefone) ? htmlspecialchars($usuario->telefone) : 'Não informado' ?></td>
                                             <td><?= !empty($usuario->cpf) ? htmlspecialchars($usuario->cpf) : "Não informado" ?></td>
                                             <td><?= !empty($usuario->email) ? htmlspecialchars($usuario->email) : 'Não informado' ?></td>
@@ -62,6 +71,9 @@
                                                     switch ($usuario->nivel_acesso) {
                                                         case 4:
                                                             echo "Administrador";
+                                                            break;
+                                                        case 2:
+                                                            echo "Instrutor";
                                                             break;
                                                         case 5:
                                                             echo "Super Administrador";

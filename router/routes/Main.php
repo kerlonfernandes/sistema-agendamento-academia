@@ -11,5 +11,5 @@ $Main = [
     "/register" => "MainController@cadastrar_post",
     "/vizualizar-horarios" => "MainController@vizualizar_horarios",
     "/agendamentos-usuario" => "MainController@vizualizar_horarios_usuario",
-
+    "/upload-profile-image" => "MainController@upload_profile_image"
 ];
