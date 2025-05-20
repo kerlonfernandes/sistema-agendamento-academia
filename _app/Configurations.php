@@ -2,7 +2,7 @@
 
 require_once('app.php');
 
-define("SITE", "https://" . $_SERVER['SERVER_NAME']. '/sistema-agendamento');
+define("SITE", "https://" . $_SERVER['SERVER_NAME']. '/sistema-agendamento-academia');
 require_once('urls.php');
 
 $config_data = file_get_contents(__DIR__."/config.json");

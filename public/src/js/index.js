@@ -1,6 +1,8 @@
 $(document).ready(function () {
   const url = $("#url").val();
 
+
+
   if ($('.send_form').length > 0) {
     let formDataRaw = $('.send_form').val();
     let dados = JSON.parse(formDataRaw);
@@ -143,31 +145,31 @@ $(document).ready(function () {
 
     $('.nav-link').click(function (e) {
       e.preventDefault();
-    
+
       if (!$(this).length || !$(this).attr('id')) {
         return;
       }
-    
+
       const diaTabId = $(this).attr('id');
       const diaTab = diaTabId.replace('-tab', '');
       const dia = diasNomes[diaTab] || diaTab;
-    
+
       if (estadoAgendamento.diaSelecionado !== dia) {
         estadoAgendamento.horarioSelecionado = null;
       }
-    
+
       estadoAgendamento.diaSelecionado = dia;
-    
+
       $('.nav-link').removeClass('active');
       $(this).addClass('active');
-    
+
       $('.tab-pane').removeClass('show active');
       const tabPane = $(`#${dia}`);
-      
+
       if (tabPane.length) {
         tabPane.addClass('show active');
         carregarHorarios(dia, estadoAgendamento.horarioSelecionado);
-      } 
+      }
     });
 
     $(document).on('change', 'input[name="horario"]', function () {
@@ -404,14 +406,14 @@ $(document).ready(function () {
 
   const detalhesModal = $('#detalhesModal');
 
-  $('.btn-detalhes').click(function() {
-      const agendamentoId = $(this).data('id');
-      $('.btn-cancelar').attr('data-id', agendamentoId)
-      const modal = new bootstrap.Modal(detalhesModal);
+  $('.btn-detalhes').click(function () {
+    const agendamentoId = $(this).data('id');
+    $('.btn-cancelar').attr('data-id', agendamentoId)
+    const modal = new bootstrap.Modal(detalhesModal);
 
-      $('#detalhesModal').find('.btn-cancelar').data('id', agendamentoId);
+    $('#detalhesModal').find('.btn-cancelar').data('id', agendamentoId);
 
-      $('#modalDetalhesContent').html(`
+    $('#modalDetalhesContent').html(`
       <div class="text-center py-4">
           <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Carregando...</span>
@@ -420,45 +422,45 @@ $(document).ready(function () {
       </div>
   `);
 
-      modal.show();
+    modal.show();
 
-      $.ajax({
-              url: url+'/agendamentos-usuario',
-              type: 'GET',
-              data: {
-                  id: agendamentoId
-              }
-          })
-          .done(function(response) {
-              $('#modalDetalhesContent').html(response);
-          })
-          .fail(function() {
-              $('#modalDetalhesContent').html(`
+    $.ajax({
+      url: url + '/agendamentos-usuario',
+      type: 'GET',
+      data: {
+        id: agendamentoId
+      }
+    })
+      .done(function (response) {
+        $('#modalDetalhesContent').html(response);
+      })
+      .fail(function () {
+        $('#modalDetalhesContent').html(`
           <div class="alert alert-danger">
               Ocorreu um erro ao carregar os detalhes. Por favor, tente novamente.
           </div>
       `);
-          });
+      });
   });
 
-  $('.btn-cancelar').click(function() {
-      const agendamentoId = $(this).data('id');
-      const botao = $(this);
-      const linha = botao.closest('tr');
+  $('.btn-cancelar').click(function () {
+    const agendamentoId = $(this).data('id');
+    const botao = $(this);
+    const linha = botao.closest('tr');
 
-      bootstrap.Modal.getInstance(detalhesModal)?.hide();
+    bootstrap.Modal.getInstance(detalhesModal)?.hide();
 
-      const cancelModal = Swal.mixin({
-          customClass: {
-              confirmButton: 'btn btn-danger',
-              cancelButton: 'btn btn-secondary'
-          },
-          buttonsStyling: false
-      });
+    const cancelModal = Swal.mixin({
+      customClass: {
+        confirmButton: 'btn btn-danger',
+        cancelButton: 'btn btn-secondary'
+      },
+      buttonsStyling: false
+    });
 
-      cancelModal.fire({
-          title: 'Cancelar Agendamento',
-          html: `
+    cancelModal.fire({
+      title: 'Cancelar Agendamento',
+      html: `
           <div class="text-start">
               <p>Tem certeza que deseja cancelar este agendamento?</p>
               <div class="form-group mt-3">
@@ -469,138 +471,141 @@ $(document).ready(function () {
               </div>
           </div>
       `,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Confirmar Cancelamento',
-          cancelButtonText: 'Voltar',
-          focusConfirm: false,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar Cancelamento',
+      cancelButtonText: 'Voltar',
+      focusConfirm: false,
+      allowOutsideClick: false,
+      preConfirm: () => {
+        const motivo = $('#motivoCancelamento').val().trim();
+
+        if (!motivo) {
+          Swal.showValidationMessage('Por favor, informe o motivo');
+          return false;
+        }
+
+        if (motivo.length < 10) {
+          Swal.showValidationMessage('O motivo deve ter pelo menos 10 caracteres');
+          return false;
+        }
+
+        return motivo;
+      },
+      didOpen: () => {
+        setTimeout(() => {
+          $('#motivoCancelamento').trigger('focus');
+        }, 100);
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const motivo = result.value;
+
+        cancelModal.fire({
+          title: 'Processando...',
+          html: 'Cancelando seu agendamento',
           allowOutsideClick: false,
-          preConfirm: () => {
-              const motivo = $('#motivoCancelamento').val().trim();
-
-              if (!motivo) {
-                  Swal.showValidationMessage('Por favor, informe o motivo');
-                  return false;
-              }
-
-              if (motivo.length < 10) {
-                  Swal.showValidationMessage('O motivo deve ter pelo menos 10 caracteres');
-                  return false;
-              }
-
-              return motivo;
-          },
           didOpen: () => {
-              setTimeout(() => {
-                  $('#motivoCancelamento').trigger('focus');
-              }, 100);
-          }
-      }).then((result) => {
-          if (result.isConfirmed) {
-              const motivo = result.value;
+            cancelModal.showLoading();
+            $.ajax({
+              url: url + '/api/cancelar-agendamento',
+              type: 'POST',
+              data: {
+                id: agendamentoId,
+                status: 'cancelado',
+                motivo: motivo
+              },
+              dataType: 'json'
+            })
+              .done(function (response) {
+                Swal.close();
 
-              cancelModal.fire({
-                  title: 'Processando...',
-                  html: 'Cancelando seu agendamento',
-                  allowOutsideClick: false,
-                  didOpen: () => {
-                      cancelModal.showLoading();
-                      $.ajax({
-                              url: url+'/api/cancelar-agendamento',
-                              type: 'POST',
-                              data: {
-                                  id: agendamentoId,
-                                  status: 'cancelado',
-                                  motivo: motivo
-                              },
-                              dataType: 'json'
-                          })
-                          .done(function(response) {
-                              Swal.close();
+                if (response.status === 'success') {
+                  const agendamentoRow = $(`[data-id="${agendamentoId}"]`).closest('tr');
 
-                              if (response.status === 'success') {
-                                  const agendamentoRow = $(`[data-id="${agendamentoId}"]`).closest('tr');
+                  agendamentoRow.find('.badge')
+                    .removeClass('bg-success bg-warning bg-primary')
+                    .addClass('bg-danger')
+                    .text('cancelado');
 
-                                  agendamentoRow.find('.badge')
-                                      .removeClass('bg-success bg-warning bg-primary')
-                                      .addClass('bg-danger')
-                                      .text('cancelado');
+                  agendamentoRow.find('.btn-cancelar').prop('disabled', true);
+                  agendamentoRow.find('.btn-detalhes').addClass('disabled');
 
-                                  agendamentoRow.find('.btn-cancelar').prop('disabled', true);
-                                  agendamentoRow.find('.btn-detalhes').addClass('disabled');
+                  agendamentoRow.css('background-color', '#ffebee')
+                    .animate({
+                      backgroundColor: '#ffffff'
+                    }, 1500);
 
-                                  agendamentoRow.css('background-color', '#ffebee')
-                                      .animate({
-                                          backgroundColor: '#ffffff'
-                                      }, 1500);
+                  Swal.fire({
+                    title: '✔️ ' + response.message,
+                    text: 'O agendamento foi marcado como cancelado',
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                      agendamentoRow.highlight(2000);
+                    }
+                  });
 
-                                  Swal.fire({
-                                      title: '✔️ ' + response.message,
-                                      text: 'O agendamento foi marcado como cancelado',
-                                      icon: 'success',
-                                      showConfirmButton: false,
-                                      timer: 2000,
-                                      timerProgressBar: true,
-                                      didOpen: () => {
-                                          agendamentoRow.highlight(2000);
-                                      }
-                                  });
+                } else {
+                  const isWarning = response.code === 400;
 
-                              } else {
-                                  const isWarning = response.code === 400;
-
-                                  Swal.fire({
-                                      title: isWarning ? '⚠️ Atenção' : '❌ Erro',
-                                      text: response.message,
-                                      icon: isWarning ? 'warning' : 'error',
-                                      showConfirmButton: true,
-                                      showCancelButton: isWarning,
-                                      cancelButtonText: 'Corrigir',
-                                      confirmButtonText: 'Entendi'
-                                  }).then((result) => {
-                                      if (isWarning && result.isDismissed) {
-                                          showCancelModal(agendamentoId);
-                                      }
-                                  });
-                              }
-                          })
-                          .fail(function(error) {
-                              Swal.fire({
-                                  title: '⛔ Erro de Conexão',
-                                  text: 'Não foi possível comunicar com o servidor',
-                                  icon: 'error',
-                                  footer: '<small>Tente novamente em alguns instantes</small>',
-                                  showConfirmButton: true,
-                                  showCancelButton: true,
-                                  cancelButtonText: 'Fechar',
-                                  confirmButtonText: 'Tentar Novamente'
-                              }).then((result) => {
-                                  if (result.isConfirmed) {
-                                      setTimeout(() => {
-                                          $('.btn-cancelar[data-id="' + agendamentoId + '"]').click();
-                                      }, 500);
-                                  }
-                              });
-                          });
-
-                      $.fn.highlight = function(duration) {
-                          this.css('background-color', '#FFF9C4');
-                          this.animate({
-                              backgroundColor: '#ffffff'
-                          }, duration);
-                          return this;
-                      };
-
-                      function showCancelModal(id) {
-                          const btn = $(`.btn-cancelar[data-id="${id}"]`);
-                          if (btn.length) {
-                              btn.click();
-                          }
-                      }
+                  Swal.fire({
+                    title: isWarning ? '⚠️ Atenção' : '❌ Erro',
+                    text: response.message,
+                    icon: isWarning ? 'warning' : 'error',
+                    showConfirmButton: true,
+                    showCancelButton: isWarning,
+                    cancelButtonText: 'Corrigir',
+                    confirmButtonText: 'Entendi'
+                  }).then((result) => {
+                    if (isWarning && result.isDismissed) {
+                      showCancelModal(agendamentoId);
+                    }
+                  });
+                }
+              })
+              .fail(function (error) {
+                Swal.fire({
+                  title: '⛔ Erro de Conexão',
+                  text: 'Não foi possível comunicar com o servidor',
+                  icon: 'error',
+                  footer: '<small>Tente novamente em alguns instantes</small>',
+                  showConfirmButton: true,
+                  showCancelButton: true,
+                  cancelButtonText: 'Fechar',
+                  confirmButtonText: 'Tentar Novamente'
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    setTimeout(() => {
+                      $('.btn-cancelar[data-id="' + agendamentoId + '"]').click();
+                    }, 500);
                   }
+                });
               });
+
+            $.fn.highlight = function (duration) {
+              this.css('background-color', '#FFF9C4');
+              this.animate({
+                backgroundColor: '#ffffff'
+              }, duration);
+              return this;
+            };
+
+            function showCancelModal(id) {
+              const btn = $(`.btn-cancelar[data-id="${id}"]`);
+              if (btn.length) {
+                btn.click();
+              }
+            }
           }
-      });
+        });
+      }
+    });
   });
+
+
+
   $("#overlay").fadeOut(500);
 });

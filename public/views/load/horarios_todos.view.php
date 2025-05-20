@@ -15,13 +15,13 @@ $todos_horarios = array_unique(array_map(function ($h) {
 }, $horarios));
 sort($todos_horarios);
 
-$diasSemana = [
-    'segunda-feira',
-    'terca-feira',
-    'quarta-feira',
-    'quinta-feira',
-    'sexta-feira'
-];
+// $diasSemana = [
+//     'segunda-feira',
+//     'terca-feira',
+//     'quarta-feira',
+//     'quinta-feira',
+//     'sexta-feira'
+// ];
 ?>
 <div class="table-responsive mb-4" style="position: relative; overflow: auto; max-height: 80vh;">
     <table class="table">
@@ -92,3 +92,17 @@ $diasSemana = [
         </tbody>
     </table>
 </div>
+
+<script>
+      $(".form-check-input").on('click', function (e) {
+    if ($(this).data('wasChecked')) {
+      $(this).prop('checked', false);
+      $(this).data('wasChecked', false);
+    } else {
+      $(this).data('wasChecked', true);
+    }
+
+    var name = $(this).attr('name');
+    $(".form-check-input[name='" + name + "']").not(this).data('wasChecked', false);
+  });
+</script>

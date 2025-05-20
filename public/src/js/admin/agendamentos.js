@@ -4,24 +4,14 @@ $(document).ready(function () {
     $('#agendamentosTable').DataTable({
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/pt-BR.json',
-            search: "Pesquisar:",
-            searchPlaceholder: "Digite para pesquisar...",
             lengthMenu: "Mostrar _MENU_ registros por página"
         },
         order: [[0, 'desc']],
         pageLength: 10,
         responsive: true,
-        dom: '<"top-container"<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 search-container"f>>>rt<"bottom-container"<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>>',
+        dom: '<"top-container"<"row"<"col-sm-12 col-md-6"l>>>rt<"bottom-container"<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>>',
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
-        initComplete: function () {
-            $('.search-container input').addClass('form-control form-control-lg');
-            $('.search-container').css({
-                'text-align': 'right',
-                'padding-right': '15px'
-            });
-        },
         columnDefs: [
-
             {
                 targets: [1, 2, 3],
                 orderable: true
@@ -39,6 +29,25 @@ $(document).ready(function () {
                 width: '150px'
             }
         ]
+    });
+
+    $(document).on("show.bs.modal", "#editarPagamentoModal", function (e) {
+        const button = $(e.relatedTarget);
+        const id = button.data('id');
+        const back_url = button.data('back_url');
+        const user_id = button.data('user_id');
+
+        $.ajax({
+            url: url + "/reload/editar-registro-pagamento.php",
+            type: "GET",
+            data: { id: id, back_url: back_url, user_id: user_id },
+            beforeSend: function () {
+                $(".editar-pagamento-form").html('<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+            },
+            success: function (response) {
+                $(".editar-pagamento-form").html(response);
+            }
+        });
     });
 
     $(document).on("show.bs.modal", "#editar-horario", function (e) {
@@ -499,6 +508,36 @@ $(document).ready(function () {
     $('.texto-aviso-area').removeClass('d-none');
 
     $("#overlay").fadeOut(500);
+
+    $('#filtrarVinculo').on('change', function() {
+        const vinculoOption = $('.vinculo-option');
+        if ($(this).is(':checked')) {
+            vinculoOption.show();
+            $('#filtroCliente').val('vinculo');
+        } else {
+            vinculoOption.hide();
+            if ($('#filtroCliente').val() === 'vinculo') {
+                $('#filtroCliente').val('');
+            }
+        }
+    });
+
+    function atualizarPlaceholder() {
+        const filtroSelecionado = $('#filtroCliente').val();
+        const vinculoSelecionado = $('#tipoVinculo').val();
+        const textoFiltro = $('#filtroCliente option:selected').text();
+        const textoVinculo = $('#tipoVinculo option:selected').text();
+
+        if (filtroSelecionado && vinculoSelecionado) {
+            $('.form-control').attr('placeholder', `Buscar ${textoVinculo.toLowerCase()} por ${textoFiltro.toLowerCase()}`);
+        } else if (filtroSelecionado) {
+            $('.form-control').attr('placeholder', `Buscar por ${textoFiltro.toLowerCase()}`);
+        } else {
+            $('.form-control').attr('placeholder', 'Buscar...');
+        }
+    }
+
+    $('#filtroCliente, #tipoVinculo').on('change', atualizarPlaceholder);
 });
 
 

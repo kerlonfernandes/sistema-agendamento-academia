@@ -520,6 +520,8 @@ class AdminController extends Base
                 'telefone' => trim($post->telefone),
                 'email' => trim($post->email),
                 'vinculo' => trim($post->vinculo),
+                'data_cobranca' => $post->data_cobranca,
+                'cobranca_automatica' => $post->cobranca_automatica,
                 'nivel_acesso' => $post->nivel_acesso
             ],
             ['id' => $post->id]
@@ -746,7 +748,7 @@ class AdminController extends Base
         $usuarios = $this->internModel->get_users();
 
         $this->view('admin/usuarios', [
-            'title' => "Acompanhamento dos horários",
+            'title' => "Usuários",
             'usuarios' => $usuarios
         ]);
     }

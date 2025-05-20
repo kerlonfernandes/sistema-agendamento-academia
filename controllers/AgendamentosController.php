@@ -24,7 +24,7 @@ class AgendamentosController extends Base
         $this->internModel = new InternModel();
         $this->userId      = isset($_SESSION['userId']) ? $_SESSION['userId'] : 0;
         $this->agendaModel = new AgendaModel();
-        $this->dias_semana = ['segunda-feira', 'terca-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira'];
+        $this->dias_semana = ['segunda-feira', 'terca-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira']; // aqui será os dias da semana que irão ser pegos do banco de dados
     }
 
     // views
@@ -41,11 +41,26 @@ class AgendamentosController extends Base
     public function clientes_view()
     {
 
-        $agendamentos = $this->agendaModel->get_agendamentos();
-        
+        $get = Get();
+        $filtro = $get->f ?? "";
+        $valor = $get->q ?? "";
+        $vinculo = $get->v ?? "";
+
+        $agendamentos = $this->agendaModel->get_agendamentos_by_filtro(
+            $filtro,
+            $valor,
+            $vinculo
+        );
+        $pelo_gue = ucfirst($vinculo) ??  "";
+
+        $vinculos = $this->internModel->get_vinculo_formulario()->results[0];
+        $arrayVinculos = json_decode( $vinculos->vinculos ?? '{}', true ) ?: [];
+
         $this->view('admin/clientes', [
             'title'        => "UNIVC | Agendamento",
-            'agendamentos' => $agendamentos
+            'agendamentos' => $agendamentos,
+            'vinculos'     => $arrayVinculos,
+            'pelo_gue'     => $pelo_gue
         ]);
     }
 
@@ -60,15 +75,18 @@ class AgendamentosController extends Base
         $vinculos      = $this->internModel->get_vinculo_formulario()->results[0];
         $instrutor     = null;
         $i             = null;
+        $financeiro    = null;
 
         $arrayVinculos = json_decode( $vinculos->vinculos ?? '{}', true ) ?: [];
 
+        $financeiro = $this->internModel->get_pendencias_financeiras( $id );
 
         if ( $usuario->status != 'success' || $usuario->affected_rows <= 0 ) {
             $this->helpers->redirect( SITE . "/admin/usuarios" );
         }
 
         if($usuario->results[0]->nivel_acesso == 2) {
+            
             $instrutor = $this->agendaModel->get_instructor_horarios($id);
         }
 
@@ -79,7 +97,8 @@ class AgendamentosController extends Base
             'usuario'   => $usuario->results[0],
             'horarios'  => $horarios,
             'vinculos'  => $arrayVinculos,
-            'instrutor' => $instrutor
+            'instrutor' => $instrutor,
+            'financeiro' => $financeiro
         ]);
     }
     // fim das views
@@ -267,7 +286,8 @@ class AgendamentosController extends Base
                 'horario_selecionado' => $horario,
                 'limite_agendamentos' => $limite_agendamentos,
                 'metade'              => $metade,
-                'um_a_menos'          => $um_a_menos
+                'um_a_menos'          => $um_a_menos,
+                'diasSemana'         => $this->dias_semana
             ]);
 
             return;

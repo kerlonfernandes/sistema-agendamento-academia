@@ -70,7 +70,7 @@ class UserModel extends Model
         return $cpfResult;
     }
 
-    public function createUser(string $nome, string $cpfCnpj, string $email, string $telefone, string $senha)
+    public function createUser(string $nome, string $cpfCnpj, string $email, string $telefone, string $senha, string $vinculo)
     {
         $sql = "INSERT INTO `users` 
             (`nome`, `cpf`, `email`, `telefone`, `password`, `vinculo`, `nivel_acesso`, `status`, `created_at`) 
@@ -83,7 +83,7 @@ class UserModel extends Model
             ':email'        => $email,
             ':telefone'     => $telefone,
             ':senha'        => $this->helpers->hashPassword($senha),
-            ':vinculo'      => 'Estudante', // ajuste conforme sua regra de negócio
+            ':vinculo'      => $vinculo,
             ':nivel_acesso' => 1,         // por padrão 1 = usuário comum
             ':status'       => 1,         // 1 = ativo
             ':created_at'   => date('Y-m-d H:i:s')

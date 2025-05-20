@@ -81,6 +81,19 @@
                                     </div>
 
                                     <div class="col-12">
+                                        <label for="vinculo" class="form-label">Qual seu vínculo com a UNIVC?</label>
+                                        <div class="input-group has-validation">
+                                            <span class="input-group-text bg-light"><i class="bi bi-people text-muted"></i></span>
+                                            <select class="form-select border-start-0" id="vinculo" name="vinculo" required>
+                                                <?php foreach ($vinculos as $label => $vinculo): ?>
+                                                    <option value="<?= htmlspecialchars($vinculo) ?>"><?= htmlspecialchars($label) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <div class="invalid-feedback">Por favor, selecione seu vínculo</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
                                         <label for="yourCpf" class="form-label">CPF</label>
                                         <div class="input-group has-validation">
                                             <span class="input-group-text bg-light"><i class="bi bi-card-text text-muted"></i></span>

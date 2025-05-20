@@ -1,6 +1,5 @@
 <?php
 session_start();
-
 // $_SESSION['loggedUser'] = true;
 // $_SESSION['userId'] = 1;
 // $_SESSION['nome'] = 'Administrador';

@@ -131,7 +131,7 @@ class InternModel extends Model
 
     public function get_users()
     {
-        $results = $this->selectFrom('users', '*', [], ['status' => "1"]);
+        $results = $this->selectFrom('users', '*', [], ['status' => "1"], ['created_at' => 'desc']);
         return $results;
     }
 
@@ -185,5 +185,54 @@ class InternModel extends Model
                 ac.horario_id, ac.id",
             [':quantidade_maxima' => $quantidade_maxima]
         );
+    }
+
+    public function get_pendencias_financeiras(int $user_id) {
+        
+        $financeiro = new stdClass();
+        
+        $pendencias = $this->database->execute_query(
+            "SELECT 
+                p.id,
+                p.user_id,
+                p.valor,
+                p.data_vencimento,
+                p.observacoes,
+                p.status,
+                p.created_at
+            FROM pendencias_financeiras p
+            WHERE p.user_id = :user_id AND p.status = 'pendente'",
+            [':user_id' => $user_id]
+        );
+
+
+        $total = $this->database->execute_query(
+            "SELECT SUM(p.valor) AS total FROM pendencias_financeiras p WHERE p.user_id = :user_id AND p.status = 'pago'",
+            [':user_id' => $user_id]
+        );
+
+        $total_pendente = $this->database->execute_query(
+            "SELECT SUM(p.valor) AS total FROM pendencias_financeiras p WHERE p.user_id = :user_id AND p.status = 'pendente'",
+            [':user_id' => $user_id]
+        );
+
+        $total_cancelados = $this->database->execute_query(
+            "SELECT SUM(p.valor) AS total FROM pendencias_financeiras p WHERE p.user_id = :user_id AND p.status = 'cancelado'",
+            [':user_id' => $user_id]
+        );
+        
+
+        $historico = $this->database->execute_query(
+            "SELECT * FROM pendencias_financeiras WHERE user_id = :user_id",
+            [':user_id' => $user_id]
+        );
+
+        $financeiro->pendencias = $pendencias->results;
+        $financeiro->total = $total->results[0]->total;
+        $financeiro->historico = $historico->results;
+        $financeiro->total_pendente = $total_pendente->results[0]->total;
+        $financeiro->total_cancelados = $total_cancelados->results[0]->total;
+        
+        return $financeiro;
     }
 }

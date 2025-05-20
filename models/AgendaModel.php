@@ -405,6 +405,7 @@ class AgendaModel extends Model
                 users.nome,
                 users.email,
                 users.telefone,
+                users.vinculo,
                 COUNT(agendamentos_clientes.id) as total_horarios,
                 GROUP_CONCAT(
                     CONCAT(
@@ -421,9 +422,58 @@ class AgendaModel extends Model
             WHERE (agendamentos_clientes.status_agendamento = 'agendado' 
          OR agendamentos_clientes.status_agendamento = 'confirmado') AND users.status = 1
             GROUP BY users.id, users.nome, users.email, users.telefone
-            ORDER BY total_horarios DESC",
+            ORDER BY users.id DESC",
             []
         );
+
+        return $agendamentos;
+    }
+
+    public function get_agendamentos_by_filtro(string $filtro = "", string $valor = "", string $vinculo = "")
+    {   
+        $query = "SELECT 
+                users.id as user_id,
+                users.nome,
+                users.email,
+                users.telefone,
+                users.vinculo,
+                COUNT(agendamentos_clientes.id) as total_horarios,
+                GROUP_CONCAT(
+                    CONCAT(
+                        horarios.dia_semana,
+                        ' - ',
+                        DATE_FORMAT(horarios.horario_inicio, '%H:%i'),
+                        ' – ',
+                        DATE_FORMAT(horarios.horario_fim, '%H:%i')
+                    ) SEPARATOR '|'
+                ) as horarios_agendados
+            FROM users 
+            INNER JOIN agendamentos_clientes ON users.id = agendamentos_clientes.user_id
+            INNER JOIN horarios ON agendamentos_clientes.horario_id = horarios.id
+            WHERE (agendamentos_clientes.status_agendamento = 'agendado' 
+                OR agendamentos_clientes.status_agendamento = 'confirmado') 
+                AND users.status = 1";
+
+        $params = [];
+
+        if($vinculo != "") {
+            $query .= " AND users.vinculo = :vinculo";
+            $params[':vinculo'] = $vinculo;
+        }
+
+        if($filtro != "" && $valor != "") {
+            $query .= " AND users.{$filtro} LIKE :valor";
+            $params[':valor'] = "%{$valor}%";
+        } else if($valor != "") {
+            $query .= " AND (users.nome LIKE :valor OR users.email LIKE :valor OR users.telefone LIKE :valor)";
+            $params[':valor'] = "%{$valor}%";
+        }
+
+        $query .= " GROUP BY users.id, users.nome, users.email, users.telefone
+            ORDER BY users.id DESC";
+
+
+        $agendamentos = $this->database->execute_query($query, $params);
 
         return $agendamentos;
     }
@@ -503,17 +553,21 @@ class AgendaModel extends Model
     public function agendamento_existe_dia_semana(int $cliente_id, string $dias_semana)
     {
         $results = $this->database->execute_query(
-            'SELECT 
-                    COUNT(*) AS cliente_dia_semana
-                FROM 
-                    users u
-                JOIN 
-                    agendamentos_clientes ac ON ac.user_id = u.id
-                JOIN 
-                    horarios h ON ac.horario_id = h.id
-                WHERE 
-                    u.id = :user_id
-                    AND h.dia_semana = :dia_semana',
+            "SELECT 
+                COUNT(*) AS cliente_dia_semana
+            FROM 
+                users u
+JOIN 
+    agendamentos_clientes ac ON ac.user_id = u.id
+JOIN 
+    horarios h ON ac.horario_id = h.id
+WHERE 
+    u.id = :user_id
+    AND h.dia_semana = :dia_semana
+            AND (
+                ac.status_agendamento = 'agendado' 
+                OR ac.status_agendamento = 'confirmado'
+            );",
             [
                 ":user_id" => $cliente_id,
                 ":dia_semana" => $dias_semana
@@ -529,6 +583,7 @@ class AgendaModel extends Model
             users.id AS user_id, 
             users.nome, 
             users.telefone,
+            users.profile_img,
             horarios.dia_semana, 
             horarios.horario_inicio, 
             horarios.horario_fim,

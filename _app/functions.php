@@ -342,3 +342,8 @@ function isValidCPF(string $cpf): bool {
 
     return true;
 }
+
+function formatarMoeda($valor) {
+    return number_format($valor, 2, ',', '.');
+}
+

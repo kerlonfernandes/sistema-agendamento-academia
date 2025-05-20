@@ -26,8 +26,7 @@ $Admin = [
     "/admin/deletar/agendamento" => "AdminController@deleta_agendamento",
     "/admin/resolver/agendamentos" => "AdminController@resolver_agendamentos",
     "/admin/instrutores" => "AdminController@instrutores",
-    "/admin/instrutor/remover/horario" => "AdminController@instrutor_remover_horario"
-
+    "/admin/instrutor/remover/horario" => "AdminController@instrutor_remover_horario",
 
 
 ];

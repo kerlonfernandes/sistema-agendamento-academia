@@ -216,13 +216,19 @@ class MainController extends Base
             $nome     = json_decode($_SESSION['last_form']->agendamentos)[0]->nome;
             $email    = json_decode($_SESSION['last_form']->agendamentos)[0]->email;
             $telefone = json_decode($_SESSION['last_form']->agendamentos)[0]->telefone;
-        }
+        }   
+
+        $configuracoes = $this->internModel->get_configuracoes()->results[0];
+        
+        $vinculos = json_decode($configuracoes->vinculos);
+
 
         $this->view('cadastrar', [
             'title'    => "Cadastro",
             'nome'     => $nome,
             'email'    => $email,
-            'telefone' => $telefone
+            'telefone' => $telefone,
+            'vinculos' => $vinculos
         ]);
     }
 
@@ -237,6 +243,7 @@ class MainController extends Base
         $password = trim($post->password ?? '');
         $cpf = preg_replace('/[^0-9]/', '', $post->cpf ?? '');
         $phone = trim($post->phone ?? '');
+
 
         if (empty($name) || empty($email) || empty($password) || empty($cpf)) {
             $_SESSION['alert_message'] = [
@@ -293,7 +300,8 @@ class MainController extends Base
             desformatarCPF($cpf),
             $email,
             $phone,
-            $password
+            $password,
+            $post->vinculo
         );
 
         if ($r->affected_rows <= 0 || $r->status != 'success') {
